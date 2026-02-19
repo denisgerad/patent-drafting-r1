@@ -1,0 +1,68 @@
+{
+  "Electronics": {
+    "role": "Electronic Engineering Patent Analyst",
+    "focus_areas": [
+      "Circuit topology and component selection",
+      "Signal conditioning and noise rejection",
+      "Power delivery and voltage regulation",
+      "Timing and clock domain specifications",
+      "PCB layout constraints and EMC compliance"
+    ],
+    "technical_units": ["V", "A", "Ω", "Hz", "dB", "ns", "µF", "µH"]
+  },
+  "Mechanical": {
+    "role": "Mechanical Systems Patent Examiner",
+    "focus_areas": [
+      "Kinematic chain and degree-of-freedom analysis",
+      "Material selection and mechanical properties",
+      "Tolerance stack-up and fits/clearances",
+      "Load cases and stress/fatigue calculations",
+      "Manufacturing process and assembly sequence"
+    ],
+    "technical_units": ["mm", "N", "Nm", "MPa", "GPa", "°", "kg"]
+  },
+  "Chemical": {
+    "role": "Chemical Process Patent Specialist",
+    "focus_areas": [
+      "Reaction mechanism and yield optimisation",
+      "Catalyst identity, loading and regeneration",
+      "Temperature and pressure operating windows",
+      "Solvent selection and purification steps",
+      "Analytical characterisation methods (HPLC, GC, NMR)"
+    ],
+    "technical_units": ["mol%", "wt%", "°C", "bar", "mL/min", "g/L"]
+  },
+  "Software": {
+    "role": "Software Patent Technical Reviewer",
+    "focus_areas": [
+      "Algorithm pseudocode and data-flow diagrams",
+      "Data structures and complexity (time/space)",
+      "API contracts and inter-module interfaces",
+      "Concurrency model and synchronisation primitives",
+      "Security boundaries and input validation"
+    ],
+    "technical_units": ["ms", "ops/s", "MB", "GB", "threads", "connections"]
+  },
+  "Medical Devices": {
+    "role": "Medical Device Patent Analyst",
+    "focus_areas": [
+      "Biocompatibility and sterilisation method",
+      "Clinical performance parameters and ranges",
+      "Regulatory classification (ISO 13485, FDA 510k)",
+      "Material-tissue interaction and degradation rate",
+      "Safety limits and failure mode analysis"
+    ],
+    "technical_units": ["mm", "N", "Pa", "µm", "°C", "mg/kg", "mGy"]
+  },
+  "Materials": {
+    "role": "Materials Science Patent Specialist",
+    "focus_areas": [
+      "Composition (elemental/phase) and purity grade",
+      "Microstructure and grain size characterisation",
+      "Processing route (sintering, rolling, heat treatment)",
+      "Mechanical, thermal and electrical properties",
+      "Corrosion and wear performance data"
+    ],
+    "technical_units": ["wt%", "at%", "µm", "MPa", "GPa", "W/mK", "Ω·m"]
+  }
+}

@@ -1,0 +1,39 @@
+# ── Core framework ────────────────────────────────────────────────────────────
+# ── Core framework ────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+crewai>=0.41.0
+
+# ── LLM backend (required by crewai >= 0.80) ──────────────────────────────────
+# CrewAI 0.80+ delegates all LLM calls through litellm.
+# Without this you get: ImportError: Fallback to LiteLLM is not available
+litellm>=1.40.0
+
+# ── LLM / Embeddings ─────────────────────────────────────────────────────────
+# sentence-transformers is NOT loaded in the Streamlit app –
+# ChromaDB's default embedding function handles embeddings internally.
+# If you want a custom embedding model, re-enable this:
+# sentence-transformers>=2.7.0
+
+# ── Vector store ─────────────────────────────────────────────────────────────
+chromadb>=0.5.0
+
+# ── Document loading ──────────────────────────────────────────────────────────
+pymupdf>=1.24.0           # PDF text extraction (fitz)
+python-docx>=1.1.0        # DOCX read/write
+langchain-text-splitters>=0.2.0
+
+# ── Translation ───────────────────────────────────────────────────────────────
+transformers>=4.40.0
+sentencepiece>=0.2.0      # required by MarianTokenizer
+torch>=2.2.0              # CPU-only: install torch==2.2.0+cpu from PyTorch wheel if needed
+
+# ── Export ────────────────────────────────────────────────────────────────────
+reportlab>=4.1.0          # PDF export
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# ── Optional OCR (uncomment to enable) ───────────────────────────────────────
+# pytesseract>=0.3.10
+# Pillow>=10.0.0

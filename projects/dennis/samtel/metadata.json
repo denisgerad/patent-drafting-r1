@@ -1,0 +1,22 @@
+{
+  "project_name": "samtel",
+  "patent_type": "Electronics",
+  "created": "2026-02-19 12:13:33",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Electronics",
+      "secondary_domains": [],
+      "confidence": 0.95,
+      "justification": "The invention relates to ruggedization of Liquid Crystal Displays (LCDs) and specifically mentions an over-the-frame bonding technique that enhances the mechanical, environmental, and functional performance of commercial off-the-shelf (COTS) LCD panels without altering or dismantling their original internal construction. The document also highlights the use of adhesive for bonding additional layers on top of the existing LCD frame, which is a typical electronic component.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Electronics"
+  }
+}
