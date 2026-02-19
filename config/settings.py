@@ -29,10 +29,6 @@ CHROMA_PATH: str  = os.getenv("CHROMA_PATH", "./chromadb_store")
 CHUNK_SIZE: int    = int(os.getenv("CHUNK_SIZE", "500"))
 CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
 
-# ── Translation ───────────────────────────────────────────────────────────────
-TRANSLATION_MODEL: str   = os.getenv("TRANSLATION_MODEL", "Helsinki-NLP/opus-mt-en-de")
-TRANSLATION_MAX_LEN: int = int(os.getenv("TRANSLATION_MAX_LENGTH", "512"))
-
 # ── Auto-classifier ───────────────────────────────────────────────────────────
 CLASSIFIER_CONFIDENCE: float = float(os.getenv("CLASSIFIER_CONFIDENCE", "0.55"))
 CLASSIFIER_RAG_RESULTS: int  = int(os.getenv("CLASSIFIER_RAG_RESULTS", "10"))

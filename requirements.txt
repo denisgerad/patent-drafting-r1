@@ -22,10 +22,6 @@ pymupdf>=1.24.0           # PDF text extraction (fitz)
 python-docx>=1.1.0        # DOCX read/write
 langchain-text-splitters>=0.2.0
 
-# ── Translation ───────────────────────────────────────────────────────────────
-transformers>=4.40.0
-sentencepiece>=0.2.0      # required by MarianTokenizer
-torch>=2.2.0              # CPU-only: install torch==2.2.0+cpu from PyTorch wheel if needed
 
 # ── Export ────────────────────────────────────────────────────────────────────
 reportlab>=4.1.0          # PDF export

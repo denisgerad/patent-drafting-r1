@@ -16,9 +16,6 @@ class PDFLoadError(PatentRAGError):
 class VectorStoreError(PatentRAGError):
     """ChromaDB failure."""
 
-class TranslationError(PatentRAGError):
-    """Helsinki translation failure."""
-
 class ClassificationError(PatentRAGError):
     """Domain classification failure."""
 
