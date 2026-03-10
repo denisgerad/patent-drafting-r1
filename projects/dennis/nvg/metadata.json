@@ -1,0 +1,22 @@
+{
+  "project_name": "nvg",
+  "patent_type": "Electronics",
+  "created": "2026-03-10 04:38:12",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Optics / Display",
+      "secondary_domains": [],
+      "confidence": 0.95,
+      "justification": "The invention involves a backlight scheme for displays with dual-mode day and Night Vision Goggle (NVG) compatibility, which requires knowledge and expertise in display technologies such as LEDs, lighting, and optical engineering. The focus of the document is on improving the lighting system design and functionality, rather than mechanical or chemical aspects.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Optics / Display"
+  }
+}

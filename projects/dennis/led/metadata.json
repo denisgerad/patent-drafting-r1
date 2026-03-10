@@ -1,0 +1,24 @@
+{
+  "project_name": "led",
+  "patent_type": "Electronics",
+  "created": "2026-02-27 06:41:52",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Optics / Display",
+      "secondary_domains": [
+        "Electronics"
+      ],
+      "confidence": 0.95,
+      "justification": "The invention primarily addresses the optimization of backlight schemes for displays, particularly in the context of NVG-compatible LCD displays. The use of a single PCB and shared real estate for both day and NVG modes, while maintaining uniform luminance and compatibility with direct and edge lighting schemes, indicates a focus on display technologies. While there are some electronic components involved in the switching scheme, the primary technical domain is Optics / Display.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Optics / Display"
+  }
+}

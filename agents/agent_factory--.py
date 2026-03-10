@@ -133,42 +133,12 @@ def build_scrutinizer(
     custom_backstory: Optional[str] = None,
 ) -> Agent:
     domain_cfg = _load_domain_config(patent_type)
-    role       = custom_role or domain_cfg.get("role", "Patent Enablement Specialist")
-
-    # Expert-reviewer backstory: think from the invention's novel claims outward,
-    # not from the domain's generic checklist inward.
-    default_backstory = (
-        f"You are a senior {patent_type} patent expert with 20+ years of hands-on "
-        f"engineering and patent prosecution experience. "
-        f"You have reviewed hundreds of patent applications and know exactly what "
-        f"information an examiner will demand for §112 enablement. "
-        f"Your first instinct is always to identify what is NOVEL about this specific "
-        f"invention before asking any questions — you never ask generic domain questions "
-        f"that are not grounded in the document's own claims and technical features. "
-        f"You group your questions by the invention's own technical sub-systems, "
-        f"not by a generic checklist. "
-        f"You always demand drawings, governing equations, or measured performance data "
-        f"rather than prose descriptions."
-    )
-
-    # Optics-specific reinforcement
-    if patent_type == "Optics / Display":
-        default_backstory += (
-            " You think in terms of ray diagrams, light propagation paths, "
-            "extraction efficiency equations, refractive index boundaries, "
-            "and luminance uniformity metrics before asking any question."
-        )
-
-    backstory = custom_backstory or default_backstory
+    role      = custom_role      or domain_cfg.get("role", "Patent Enablement Specialist")
+    backstory = custom_backstory or _build_backstory(patent_type, "", domain_cfg)
 
     return Agent(
         role=role,
-        goal=(
-            "Read the patent disclosure, identify its specific novel claims and features, "
-            "then produce grouped technical questions that expose exactly what information "
-            "is missing for 35 U.S.C. §112 enablement — grounded in the document's own "
-            "novelty, not in generic domain checklists."
-        ),
+        goal="Identify technical parameters required to meet the 35 U.S.C. §112 'Enablement' standard.",
         backstory=backstory,
         llm=make_llm(model_string),
         verbose=True,

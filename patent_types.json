@@ -2,67 +2,122 @@
   "Electronics": {
     "role": "Electronic Engineering Patent Analyst",
     "focus_areas": [
-      "Circuit topology and component selection",
-      "Signal conditioning and noise rejection",
-      "Power delivery and voltage regulation",
-      "Timing and clock domain specifications",
-      "PCB layout constraints and EMC compliance"
+      "Circuit topology and component selection — ask only when circuit design IS the novel feature",
+      "Signal conditioning, noise rejection and SNR measurements",
+      "Power delivery, voltage regulation and efficiency figures",
+      "Timing, clock domain and synchronisation specifications",
+      "PCB layout constraints and EMC compliance — ask only if PCB layout IS the novel feature"
     ],
-    "technical_units": ["V", "A", "Ω", "Hz", "dB", "ns", "µF", "µH"]
+    "technical_units": ["V", "A", "Ω", "Hz", "dB", "ns", "µF", "µH"],
+    "anti_patterns": [
+      "Do NOT ask voltage/current questions for optics or mechanical inventions",
+      "Do NOT ask PCB layout questions unless the PCB itself is the novel contribution",
+      "Do NOT ask EMC questions unless electromagnetic compatibility is claimed as novel"
+    ]
   },
+
+  "Optics / Display": {
+    "role": "Optical Systems Patent Analyst",
+    "description": "Optical systems including light extraction structures, waveguides, imaging paths, luminance uniformity control, ray propagation models, and display architecture.",
+    "novelty_triggers": [
+      "light extraction",
+      "waveguide",
+      "luminance",
+      "optical pattern",
+      "dot geometry",
+      "ray diagram",
+      "refractive index",
+      "uniformity"
+    ],
+    "focus_areas": [
+      "Structural design and optical architecture — provide drawings (top view, cross-section, ray diagram)",
+      "Light extraction structure — dot/feature geometry (shape, size gradient, depth, spacing, density variation)",
+      "Governing equation or mathematical model defining the extraction pattern",
+      "Luminance uniformity — how it is maintained across all operating modes, and measured uniformity %",
+      "Simulation tools and design methodology used for optical optimisation",
+      "Material selection and thickness profile of each optical element",
+      "Fabrication method used to realise the optical structure (moulding, etching, printing)",
+      "Measurable performance improvements vs. prior art (uniformity %, efficiency %, thickness reduction)"
+    ],
+    "technical_units": ["mm", "µm", "nm", "cd/m²", "lm", "%", "°", "lm/W"],
+    "anti_patterns": [
+      "Do NOT ask generic circuit questions (voltage, PCB) unless the control electronics are the novel feature",
+      "Do NOT ask about LED drive current unless the current profile IS the optical novelty"
+    ]
+  },
+
   "Mechanical": {
     "role": "Mechanical Systems Patent Examiner",
     "focus_areas": [
       "Kinematic chain and degree-of-freedom analysis",
-      "Material selection and mechanical properties",
-      "Tolerance stack-up and fits/clearances",
-      "Load cases and stress/fatigue calculations",
+      "Material selection and mechanical properties (yield strength, fatigue life)",
+      "Tolerance stack-up, fits and clearances",
+      "Load cases, stress and fatigue calculations with safety factors",
       "Manufacturing process and assembly sequence"
     ],
-    "technical_units": ["mm", "N", "Nm", "MPa", "GPa", "°", "kg"]
+    "technical_units": ["mm", "N", "Nm", "MPa", "GPa", "°", "kg"],
+    "anti_patterns": [
+      "Do NOT ask electrical questions for purely mechanical inventions"
+    ]
   },
+
   "Chemical": {
     "role": "Chemical Process Patent Specialist",
     "focus_areas": [
-      "Reaction mechanism and yield optimisation",
-      "Catalyst identity, loading and regeneration",
-      "Temperature and pressure operating windows",
-      "Solvent selection and purification steps",
-      "Analytical characterisation methods (HPLC, GC, NMR)"
+      "Reaction mechanism and yield optimisation with conversion data",
+      "Catalyst identity, loading, and regeneration conditions",
+      "Temperature and pressure operating windows with safety limits",
+      "Solvent selection, purity grade, and purification steps",
+      "Analytical characterisation methods (HPLC, GC-MS, NMR) with acceptance criteria"
     ],
-    "technical_units": ["mol%", "wt%", "°C", "bar", "mL/min", "g/L"]
+    "technical_units": ["mol%", "wt%", "°C", "bar", "mL/min", "g/L"],
+    "anti_patterns": [
+      "Do NOT ask mechanical or electrical questions unless the reactor design is the novelty"
+    ]
   },
+
   "Software": {
     "role": "Software Patent Technical Reviewer",
     "focus_areas": [
-      "Algorithm pseudocode and data-flow diagrams",
-      "Data structures and complexity (time/space)",
-      "API contracts and inter-module interfaces",
-      "Concurrency model and synchronisation primitives",
-      "Security boundaries and input validation"
+      "Algorithm pseudocode or flowchart with decision logic",
+      "Data structures, complexity (time/space) and scalability limits",
+      "API contracts, inter-module interfaces and data schemas",
+      "Concurrency model, thread safety and synchronisation primitives",
+      "Security boundaries, input validation and threat model"
     ],
-    "technical_units": ["ms", "ops/s", "MB", "GB", "threads", "connections"]
+    "technical_units": ["ms", "ops/s", "MB", "GB", "threads", "connections"],
+    "anti_patterns": [
+      "Do NOT ask hardware questions unless the hardware-software interface is the novelty"
+    ]
   },
+
   "Medical Devices": {
     "role": "Medical Device Patent Analyst",
     "focus_areas": [
-      "Biocompatibility and sterilisation method",
-      "Clinical performance parameters and ranges",
-      "Regulatory classification (ISO 13485, FDA 510k)",
-      "Material-tissue interaction and degradation rate",
-      "Safety limits and failure mode analysis"
+      "Biocompatibility standard compliance and sterilisation method (ISO 10993)",
+      "Clinical performance parameters and acceptable ranges with evidence",
+      "Regulatory classification pathway (ISO 13485, FDA 510(k), CE marking)",
+      "Material-tissue interaction, degradation rate and leachables",
+      "Failure mode analysis (FMEA) and safety limits"
     ],
-    "technical_units": ["mm", "N", "Pa", "µm", "°C", "mg/kg", "mGy"]
+    "technical_units": ["mm", "N", "Pa", "µm", "°C", "mg/kg", "mGy"],
+    "anti_patterns": [
+      "Do NOT ask generic electronics questions unless the control electronics are novel"
+    ]
   },
+
   "Materials": {
     "role": "Materials Science Patent Specialist",
     "focus_areas": [
-      "Composition (elemental/phase) and purity grade",
-      "Microstructure and grain size characterisation",
-      "Processing route (sintering, rolling, heat treatment)",
-      "Mechanical, thermal and electrical properties",
-      "Corrosion and wear performance data"
+      "Composition (elemental or phase), purity grade and supplier specification",
+      "Microstructure and grain size characterisation (SEM, XRD, TEM)",
+      "Processing route (sintering temperature/time, rolling reduction, heat treatment cycles)",
+      "Mechanical, thermal and electrical property measurements with test standards",
+      "Corrosion, wear and environmental durability performance data"
     ],
-    "technical_units": ["wt%", "at%", "µm", "MPa", "GPa", "W/mK", "Ω·m"]
+    "technical_units": ["wt%", "at%", "µm", "MPa", "GPa", "W/mK", "Ω·m"],
+    "anti_patterns": [
+      "Do NOT ask process equipment questions unless the equipment design is claimed as novel"
+    ]
   }
 }

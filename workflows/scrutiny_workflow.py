@@ -18,6 +18,7 @@ from agents.agent_factory import build_scrutinizer
 from services.ollama_service import OllamaService
 from services.vector_store import search
 from tasks.task_factory import build_scrutiny_task, _rag_query_for_type
+from services.domain_guard import check_domain_violation
 
 logger = logging.getLogger(__name__)
 
@@ -103,4 +104,12 @@ def run(
         if hasattr(holder["result"], "raw")
         else holder["result"]
     )
+
+    # Domain guard: check for forbidden terms (e.g., electronics keywords in Optics)
+    try:
+        guard = check_domain_violation(raw, patent_type)
+        if guard.get("status") == "VIOLATION":
+            logger.warning("Domain violation detected: %s", guard.get("violations"))
+    except Exception as exc:
+        logger.exception("Domain guard check failed: %s", exc)
     return ScrutinyResult(questions=raw, agent_log=captured_log, success=True)
