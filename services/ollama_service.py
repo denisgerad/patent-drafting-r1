@@ -157,7 +157,7 @@ class OllamaService:
         try:
             from crewai import LLM
             model = self.resolve_model()
-            LLM(model=model, base_url=self._base_url)
+            LLM(model=model, base_url=cfg.OLLAMA_BASE_URL)
         except ImportError:
             pass  # crewai < 0.80, plain-string LLM is fine
         except Exception as exc:

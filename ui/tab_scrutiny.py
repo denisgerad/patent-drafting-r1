@@ -268,6 +268,8 @@ def _run_scrutiny(project_path: Optional[str]) -> None:
         return
 
     st.session_state.patent_questions = result.questions
+    # Store the extracted field of invention so the UI can show it
+    st.session_state.field_of_invention = result.field_of_invention
 
     if project_path:
         project_manager.save_questions(project_path, result.questions)
@@ -280,6 +282,25 @@ def _run_scrutiny(project_path: Optional[str]) -> None:
 def _render_questions_output(project_path: Optional[str]) -> None:
     st.divider()
     st.subheader("📋 Generated Scrutiny Questions")
+
+    # Show the extracted field of invention as a verification banner.
+    # If it does NOT match the actual patent subject, the user knows to
+    # override the domain or re-process with a clearer source document.
+    field = st.session_state.get("field_of_invention", "")
+    if field:
+        st.success(f"🔬 **Detected field of invention:** {field}")
+        st.caption(
+            "The questions below are grounded in this field. "
+            "If this does not match your invention, re-run with a clearer "
+            "abstract/field-of-invention section in your Draft1 document."
+        )
+    else:
+        st.warning(
+            "⚠️ Field of invention could not be auto-detected from the document. "
+            "Questions may be less targeted — consider adding a clear "
+            "'Field of the Invention' section to your Draft1 document."
+        )
+
     st.markdown(st.session_state.patent_questions)
 
     from services.export_service import to_docx

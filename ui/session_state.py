@@ -33,6 +33,7 @@ _DEFAULTS: Dict[str, Any] = {
     "patent_type":               "Electronics",
     # Scrutiny
     "patent_questions":          None,
+    "field_of_invention":         "",        # extracted verbatim from document
     "agent_log":                 "",
     # Consolidation
     "final_draft":               None,
