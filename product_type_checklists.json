@@ -4,8 +4,9 @@
   "flexible_heater_film": {
     "triggers": [
       "heater film", "heating film", "resistive heater", "heater element",
-      "transparent heater", "ITO heater", "polymer heater", "heating layer",
-      "defrost", "defogging", "anti-frost", "anti-condensation"
+      "heating element", "heat element", "transparent heater", "ITO heater",
+      "polymer heater", "heating layer", "defrost", "defogging",
+      "anti-frost", "anti-condensation"
     ],
     "expert_categories": [
       {
