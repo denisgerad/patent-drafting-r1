@@ -24,6 +24,44 @@ def _load_patent_types() -> dict:
         return {}
 
 
+_CHECKLISTS_PATH = cfg.PATENT_TYPES_JSON.parent / "product_type_checklists.json"
+
+
+def _load_product_checklists() -> dict:
+    try:
+        return json.loads(_CHECKLISTS_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _match_product_checklist(field_of_invention: str) -> list[dict]:
+    """
+    Match the field_of_invention string against product-type trigger patterns.
+    Returns list of matched expert_categories (each is {name, questions}).
+
+    This is the KEY mechanism that restores expert-depth questions:
+    - field_of_invention provides SCOPE (right topic)
+    - product_type_checklists provide DEPTH (right questions for that product type)
+    Both are needed. Neither alone is sufficient.
+    """
+    checklists = _load_product_checklists()
+    matched_categories = []
+    seen_names = set()
+
+    for key, entry in checklists.items():
+        if key.startswith("_"):
+            continue
+        for trigger in entry.get("triggers", []):
+            if re.search(trigger, field_of_invention, re.IGNORECASE):
+                for cat in entry.get("expert_categories", []):
+                    if cat["name"] not in seen_names:
+                        matched_categories.append(cat)
+                        seen_names.add(cat["name"])
+                break  # one trigger match per product type is enough
+
+    return matched_categories
+
+
 def _rag_query_for_type(patent_type: str) -> str:
     queries = {
         "Electronics": "invention novelty circuit components voltage signals specifications",
@@ -150,6 +188,30 @@ DOMAIN-SPECIFIC PROHIBITIONS:
         if units else ""
     )
 
+    # ── Product-type expert checklist (restores depth without losing scope) ───────
+    # Match the field_of_invention text against the product-type library.
+    # The checklist questions are used as MANDATORY EXAMPLES injected into the
+    # prompt — they tell the LLM what a domain expert would always ask about this
+    # type of product, independent of what the inventor wrote in the document.
+    matched_categories = _match_product_checklist(field_of_invention) if field_of_invention else []
+
+    checklist_block = ""
+    if matched_categories:
+        lines = [
+            "PRODUCT-TYPE EXPERT CHECKLIST",
+            "The following categories and example questions represent what a domain expert",
+            "ALWAYS asks about this type of invention, regardless of what the document says.",
+            "Use these as MANDATORY theme templates. Add them to your output even if the",
+            "document does not address them — they represent the GAPS the inventor must fill.",
+            "",
+        ]
+        for cat in matched_categories:
+            lines.append(f"[{cat['name']}]")
+            for q in cat["questions"]:
+                lines.append(f"  EXAMPLE: {q}")
+            lines.append("")
+        checklist_block = "\n".join(lines)
+
     # ── Parse field_of_invention into invention core + application context ──────
     # The field statement often has two parts:
     #   (a) what the invention IS  e.g. "a flexible polymer resistive heater film"
@@ -211,6 +273,7 @@ Patent Domain: {patent_type}
 {context}
 ===========================
 {field_anchor_block}
+{checklist_block}
 The field of invention has been pre-extracted from the document. Begin your response
 with EXACTLY these two lines (copy them verbatim, do not change them):
 

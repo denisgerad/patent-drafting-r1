@@ -130,7 +130,12 @@ class OllamaService:
         try:
             r = requests.post(
                 f"{cfg.OLLAMA_BASE_URL}/api/generate",
-                json={"model": api_model, "prompt": "Reply with YES only.", "stream": False},
+                json={
+                    "model": api_model,
+                    "prompt": "Reply with YES only.",
+                    "stream": False,
+                    "options": {"num_predict": 1},  # 1 token — fast even on cold start
+                },
                 timeout=cfg.OLLAMA_GEN_TIMEOUT,
             )
             if r.status_code == 200:

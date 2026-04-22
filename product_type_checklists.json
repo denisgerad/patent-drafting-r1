@@ -1,0 +1,145 @@
+{
+  "_comment": "Product-type expert checklists. Each entry has a 'triggers' list (regex patterns matched against the field_of_invention text) and 'expert_categories' — what a domain expert ALWAYS asks about that product type regardless of what the inventor wrote. These supply the DEPTH that the field_of_invention anchor alone cannot.",
+
+  "flexible_heater_film": {
+    "triggers": [
+      "heater film", "heating film", "resistive heater", "heater element",
+      "transparent heater", "ITO heater", "polymer heater", "heating layer",
+      "defrost", "defogging", "anti-frost", "anti-condensation"
+    ],
+    "expert_categories": [
+      {
+        "name": "Substrate & Form Factor",
+        "questions": [
+          "Is the display substrate glass or polymer (e.g. PMMA, PC, PET)? Specify the material grade, thickness (mm), and supplier.",
+          "Is the heater film flexible or rigid? If flexible, what is the minimum bend radius (mm) without cracking or delamination?",
+          "What are the overall dimensions (width × height × thickness in mm) of the heater film as delivered?",
+          "Does the CTE of the heater film match the display substrate? Provide CTE values (ppm/°C) for both and state the acceptable mismatch."
+        ]
+      },
+      {
+        "name": "Bonding & Interface Method",
+        "questions": [
+          "Is the adhesive / optical gel pre-applied to the heater film, pre-applied to the display surface, or applied wet at assembly? Describe the assembly sequence.",
+          "Is the bonding method peel-and-stick (PSA liner), liquid optical clear adhesive (LOCA), optical bonding gel, or mechanical clamping?",
+          "What is the adhesive thickness (µm), peel strength (N/25mm), and operating temperature range of the bonding layer?",
+          "Does the bonding layer introduce optical distortion (haze %, refractive index mismatch)? Provide measured values.",
+          "What surface preparation (cleaning, plasma treatment, primer) is required on the display side before bonding?"
+        ]
+      },
+      {
+        "name": "Thermal Activation & Operating Range",
+        "questions": [
+          "At what ambient or surface temperature (°C) does the heater activate? Is this a fixed threshold or dew-point controlled?",
+          "What is the maximum continuous operating surface temperature (°C) the heater is designed to maintain?",
+          "What is the maximum power density (W/m²) the heater can deliver without damaging the display or adhesive layer?",
+          "What is the thermal response time — how many seconds from activation to reaching the target surface temperature at worst-case ambient?",
+          "Is heater operation proportional (PID), bang-bang (on/off), or open-loop (fixed duty cycle)? Provide the control algorithm."
+        ]
+      },
+      {
+        "name": "Electrical & Power Interface",
+        "questions": [
+          "What is the supply voltage range (V DC or AC, Hz) and maximum current draw (A) of the heater?",
+          "What is the nominal sheet resistance (Ω/sq) of the heating element and how does it vary with temperature?",
+          "How are electrical connections made to the heater film — solder tabs, conductive adhesive, ITO bus bars, flex cable connector? Provide terminal layout drawing.",
+          "What over-temperature protection is built into the heater (thermal fuse, PTC element, NTC sensor cutoff)? Specify trip temperature."
+        ]
+      },
+      {
+        "name": "Environmental Qualification & Certification",
+        "questions": [
+          "What environmental qualification standards must the heater film meet? (e.g. MIL-STD-810 for military, DO-160 for avionics, IEC 60068 for industrial, EN 50155 for railway)",
+          "What is the operating temperature range (min to max °C) and storage temperature range required for each target deployment environment?",
+          "What humidity, condensation, and frost test conditions must the heater survive and function through? Provide the condensation onset delta-T and required clearance time.",
+          "What vibration and mechanical shock profile (g, Hz, duration) must the bonded heater-display assembly withstand without delamination or electrical failure?",
+          "What dielectric strength (V/mm) and insulation resistance (MΩ) are required between the heater element and the display surface?"
+        ]
+      }
+    ]
+  },
+
+  "light_guide_plate": {
+    "triggers": [
+      "light guide", "light guide plate", "LGP", "light guide panel",
+      "edge-lit", "edge lit", "backlight", "light extraction",
+      "dot pattern", "extraction pattern", "optical film"
+    ],
+    "expert_categories": [
+      {
+        "name": "Structural Design & Optical Architecture",
+        "questions": [
+          "Provide top-view, cross-section, and ray-diagram drawings showing the light injection geometry and overall light guide structure.",
+          "Explain the novel extraction structure including any symmetry or complementary behaviour for dual-edge or multi-edge illumination.",
+          "Clarify whether the extraction pattern is mathematically defined and provide the governing formula, if any."
+        ]
+      },
+      {
+        "name": "Dot / Feature Geometry & Light Extraction",
+        "questions": [
+          "Describe dot or feature geometry in detail: shape, size range (µm), depth (µm), pitch variation from edge to centre.",
+          "How does dot size or density change toward the centre to compensate for attenuation of the guided light?",
+          "How does changing dot geometry (shape, size, depth, spacing) affect light extraction efficiency and luminance uniformity %?"
+        ]
+      },
+      {
+        "name": "Material, Fabrication & Performance",
+        "questions": [
+          "Specify the material and refractive index of the light guide substrate.",
+          "Describe the fabrication method used to realise the extraction pattern (injection moulding, laser engraving, screen printing).",
+          "Provide measured performance data: uniformity %, luminous efficiency (lm/W), and thickness vs. prior-art comparison."
+        ]
+      }
+    ]
+  },
+
+  "led_array_pcb": {
+    "triggers": [
+      "LED array", "LED PCB", "interleaved LED", "day LED", "NVG LED",
+      "dual-mode LED", "backlight PCB", "LED board"
+    ],
+    "expert_categories": [
+      {
+        "name": "LED Arrangement & Selective Activation",
+        "questions": [
+          "Provide a drawing of the PCB showing the physical arrangement and interleavingpattern of Day and NVG LEDs.",
+          "Explain the selective activation mechanism — how are Day and NVG LED circuits isolated to prevent cross-illumination?",
+          "What is the LED pitch (mm) and the minimum spacing required to achieve uniform illumination across the display area?"
+        ]
+      },
+      {
+        "name": "Mechanical & Thermal Design",
+        "questions": [
+          "How does the single-PCB design preserve the original mechanical footprint and connector interface of the legacy assembly?",
+          "What is the thermal resistance (°C/W) from LED junction to PCB and from PCB to chassis? Provide thermal management approach.",
+          "What are the PCB dimensions, layer count, and copper weight used for the power planes?"
+        ]
+      }
+    ]
+  },
+
+  "optical_coating": {
+    "triggers": [
+      "anti-reflection coating", "AR coating", "optical coating",
+      "thin film coating", "anti-glare", "hard coat", "oleophobic"
+    ],
+    "expert_categories": [
+      {
+        "name": "Coating Composition & Deposition",
+        "questions": [
+          "What is the layer stack (material, refractive index, physical thickness in nm) for each coating layer?",
+          "What deposition process is used (sputtering, PECVD, sol-gel, dip coating)? Provide process parameters.",
+          "What substrate preparation (cleaning, plasma activation) is required before coating?"
+        ]
+      },
+      {
+        "name": "Optical & Mechanical Performance",
+        "questions": [
+          "What is the measured reflectance (%) and transmittance (%) across the target wavelength range?",
+          "What pencil hardness and abrasion resistance (Taber test, cycles to failure) does the coating achieve?",
+          "What environmental durability is demonstrated (humidity, thermal cycling, UV exposure per IEC 62788)?"
+        ]
+      }
+    ]
+  }
+}
