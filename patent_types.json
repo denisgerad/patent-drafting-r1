@@ -2,47 +2,39 @@
   "Electronics": {
     "role": "Electronic Engineering Patent Analyst",
     "focus_areas": [
-      "Circuit topology and component selection — ask only when circuit design IS the novel feature",
-      "Signal conditioning, noise rejection and SNR measurements",
-      "Power delivery, voltage regulation and efficiency figures",
-      "Timing, clock domain and synchronisation specifications",
-      "PCB layout constraints and EMC compliance — ask only if PCB layout IS the novel feature"
+      "Power electronics: switching converters, inverters, gate drivers, magnetics",
+      "Digital logic: FPGA, ASIC, microcontroller, clock architecture, timing",
+      "Sensor and signal acquisition: ADC, front-end, noise, calibration",
+      "Wireless and wired communication: RF, antenna, protocol stack, link budget",
+      "Motor and actuator drive: commutation, current loop, PWM, position sensing",
+      "PCB and hardware platform: layer stack, impedance, EMI, thermal design"
     ],
-    "technical_units": ["V", "A", "Ω", "Hz", "dB", "ns", "µF", "µH"],
+    "technical_units": ["V", "A", "W", "Ω", "Hz", "kHz", "MHz", "dB", "dBm", "ns", "ps", "µF", "nF", "µH", "nH", "°C/W", "bits", "LSB"],
     "anti_patterns": [
-      "Do NOT ask voltage/current questions for optics or mechanical inventions",
-      "Do NOT ask PCB layout questions unless the PCB itself is the novel contribution",
-      "Do NOT ask EMC questions unless electromagnetic compatibility is claimed as novel"
+      "Do NOT ask generic 'what is the supply voltage' unless power delivery IS the novel claim",
+      "Do NOT ask about PCB layout unless the PCB topology itself is the novel contribution",
+      "Do NOT ask about EMC compliance unless the EMI reduction method is what is being patented",
+      "Do NOT ask software questions (algorithms, APIs) for hardware-only inventions",
+      "Do NOT ask about the end application (e.g. the vehicle, the display) — ask only about the claimed circuit or device",
+      "Do NOT repeat questions answered elsewhere in the document — read the full RAG context first"
     ]
   },
 
   "Optics / Display": {
-    "role": "Optical Systems Patent Analyst",
-    "description": "Optical systems including light extraction structures, waveguides, imaging paths, luminance uniformity control, ray propagation models, and display architecture.",
-    "novelty_triggers": [
-      "light extraction",
-      "waveguide",
-      "luminance",
-      "optical pattern",
-      "dot geometry",
-      "ray diagram",
-      "refractive index",
-      "uniformity"
-    ],
+    "role": "Optical Systems and Display Technology Patent Analyst",
     "focus_areas": [
-      "Structural design and optical architecture — provide drawings (top view, cross-section, ray diagram)",
-      "Light extraction structure — dot/feature geometry (shape, size gradient, depth, spacing, density variation)",
-      "Governing equation or mathematical model defining the extraction pattern",
-      "Luminance uniformity — how it is maintained across all operating modes, and measured uniformity %",
-      "Simulation tools and design methodology used for optical optimisation",
-      "Material selection and thickness profile of each optical element",
-      "Fabrication method used to realise the optical structure (moulding, etching, printing)",
-      "Measurable performance improvements vs. prior art (uniformity %, efficiency %, thickness reduction)"
+      "Light guide and backlight: dot/feature geometry, extraction efficiency, uniformity",
+      "Optical film and coating: layer stack, refractive index, deposition method, transmittance",
+      "Display panel: pixel architecture, colour filter, TFT design, viewing angle",
+      "Camera and imaging optics: lens design, aberration, MTF, aperture, depth of field",
+      "Projection and AR/VR optics: waveguide, diffractive element, exit pupil, field of view",
+      "Laser and photonic: cavity design, wavelength, beam quality M², power density"
     ],
-    "technical_units": ["mm", "µm", "nm", "cd/m²", "lm", "%", "°", "lm/W"],
+    "technical_units": ["mm", "µm", "nm", "cd/m²", "lm", "lm/W", "%", "°", "dB", "lp/mm", "f/#", "sr", "W/cm²"],
     "anti_patterns": [
-      "Do NOT ask generic circuit questions (voltage, PCB) unless the control electronics are the novel feature",
-      "Do NOT ask about LED drive current unless the current profile IS the optical novelty"
+      "Do NOT ask about electronics driving the display unless the drive circuit is the novel claim",
+      "Do NOT ask about software rendering unless image processing is the invention",
+      "Do NOT ask about the end product (phone, car) — ask about the optical component itself"
     ]
   },
 
@@ -77,17 +69,23 @@
   },
 
   "Software": {
-    "role": "Software Patent Technical Reviewer",
+    "role": "Software and Computer-Implemented Invention Patent Analyst",
     "focus_areas": [
-      "Algorithm pseudocode or flowchart with decision logic",
-      "Data structures, complexity (time/space) and scalability limits",
-      "API contracts, inter-module interfaces and data schemas",
-      "Concurrency model, thread safety and synchronisation primitives",
-      "Security boundaries, input validation and threat model"
+      "Algorithm / method patent: step sequence, inputs/outputs, termination, complexity",
+      "Machine learning / AI: model architecture, training data, loss function, evaluation, reproducibility",
+      "Communication protocol / distributed system: message format, state machine, ordering guarantees, failure modes",
+      "Database / data structure: schema, query complexity, consistency, storage format",
+      "Embedded / real-time software: RTOS, task scheduling, WCET, interrupt latency, memory map",
+      "Computer-implemented business method: the TECHNICAL means must be disclosed, not just the business outcome"
     ],
-    "technical_units": ["ms", "ops/s", "MB", "GB", "threads", "connections"],
+    "technical_units": ["ms", "µs", "ns", "ops/s", "MB", "GB", "TB", "Mbps", "Gbps", "threads", "processes", "parameters", "epochs"],
     "anti_patterns": [
-      "Do NOT ask hardware questions unless the hardware-software interface is the novelty"
+      "Do NOT ask business or commercial questions — ask only about the technical implementation",
+      "Do NOT ask UI/UX questions (colour, layout, screen size) unless the visual rendering IS the novel claim",
+      "Do NOT ask about server hardware specifications unless the hardware architecture is the novel contribution",
+      "Do NOT ask vague 'how does the system work' questions — demand pseudocode, state diagrams, or data schemas",
+      "Do NOT ask about the application domain (e.g. healthcare, finance) — ask about the technical claim",
+      "For ML patents: do NOT accept 'neural network' as sufficient — demand architecture, layer types, and training details"
     ]
   },
 
@@ -121,3 +119,4 @@
     ]
   }
 }
+

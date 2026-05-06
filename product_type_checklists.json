@@ -1,12 +1,19 @@
 {
   "_comment": "Product-type expert checklists. Each entry has a 'triggers' list (regex patterns matched against the field_of_invention text) and 'expert_categories' — what a domain expert ALWAYS asks about that product type regardless of what the inventor wrote. These supply the DEPTH that the field_of_invention anchor alone cannot.",
-
   "flexible_heater_film": {
     "triggers": [
-      "heater film", "heating film", "resistive heater", "heater element",
-      "heating element", "heat element", "transparent heater", "ITO heater",
-      "polymer heater", "heating layer", "defrost", "defogging",
-      "anti-frost", "anti-condensation"
+      "heater film",
+      "heating film",
+      "resistive heater",
+      "heater element",
+      "transparent heater",
+      "ITO heater",
+      "polymer heater",
+      "heating layer",
+      "defrost",
+      "defogging",
+      "anti-frost",
+      "anti-condensation"
     ],
     "expert_categories": [
       {
@@ -59,12 +66,19 @@
       }
     ]
   },
-
   "light_guide_plate": {
     "triggers": [
-      "light guide", "light guide plate", "LGP", "light guide panel",
-      "edge-lit", "edge lit", "backlight", "light extraction",
-      "dot pattern", "extraction pattern", "optical film"
+      "light guide",
+      "light guide plate",
+      "LGP",
+      "light guide panel",
+      "edge-lit",
+      "edge lit",
+      "backlight",
+      "light extraction",
+      "dot pattern",
+      "extraction pattern",
+      "optical film"
     ],
     "expert_categories": [
       {
@@ -93,11 +107,16 @@
       }
     ]
   },
-
   "led_array_pcb": {
     "triggers": [
-      "LED array", "LED PCB", "interleaved LED", "day LED", "NVG LED",
-      "dual-mode LED", "backlight PCB", "LED board"
+      "LED array",
+      "LED PCB",
+      "interleaved LED",
+      "day LED",
+      "NVG LED",
+      "dual-mode LED",
+      "backlight PCB",
+      "LED board"
     ],
     "expert_categories": [
       {
@@ -118,11 +137,15 @@
       }
     ]
   },
-
   "optical_coating": {
     "triggers": [
-      "anti-reflection coating", "AR coating", "optical coating",
-      "thin film coating", "anti-glare", "hard coat", "oleophobic"
+      "anti-reflection coating",
+      "AR coating",
+      "optical coating",
+      "thin film coating",
+      "anti-glare",
+      "hard coat",
+      "oleophobic"
     ],
     "expert_categories": [
       {
@@ -139,6 +162,512 @@
           "What is the measured reflectance (%) and transmittance (%) across the target wavelength range?",
           "What pencil hardness and abrasion resistance (Taber test, cycles to failure) does the coating achieve?",
           "What environmental durability is demonstrated (humidity, thermal cycling, UV exposure per IEC 62788)?"
+        ]
+      }
+    ]
+  },
+  "power_electronics": {
+    "triggers": [
+      "switching converter",
+      "buck converter",
+      "boost converter",
+      "flyback",
+      "power supply",
+      "SMPS",
+      "inverter",
+      "DC-DC",
+      "AC-DC",
+      "rectifier",
+      "gate driver",
+      "LLC converter",
+      "PFC",
+      "battery charger",
+      "UPS",
+      "voltage regulator",
+      "linear regulator",
+      "LDO"
+    ],
+    "expert_categories": [
+      {
+        "name": "Switching Topology & Operating Point",
+        "questions": [
+          "What is the switching topology (buck, boost, flyback, LLC, SEPIC, Cuk)? Provide a schematic of the power stage including all reactive elements.",
+          "What is the switching frequency (kHz or MHz), input voltage range (V), output voltage (V), and maximum output current (A)?",
+          "What is the duty cycle range (min to max %) at the extremes of input voltage and load? Provide the governing volt-second balance equation.",
+          "What is the measured power conversion efficiency (%) vs. load curve from 10% to 100% load at nominal input voltage?",
+          "What is the output voltage ripple (mV peak-to-peak) and load regulation (%) at full load?"
+        ]
+      },
+      {
+        "name": "Magnetic Design",
+        "questions": [
+          "What core material (ferrite grade, powder iron), core shape, and core size are used for each magnetic element? Provide the manufacturer part number.",
+          "What is the peak flux density Bpeak (mT), saturation flux density Bsat (mT), and core loss (mW/cm³) at the operating frequency?",
+          "What is the inductance value (µH or mH), AL value (nH/turn²), and number of turns for each winding?",
+          "How is the air gap length determined, and what gap length (mm) is used? Provide the inductance vs. DC bias curve.",
+          "What is the winding arrangement (interleaved, sectional) and the measured leakage inductance (µH)?"
+        ]
+      },
+      {
+        "name": "Gate Drive & Switch Selection",
+        "questions": [
+          "What switching devices are used (MOSFET, GaN FET, SiC MOSFET, IGBT)? Provide the part number, Vds rating (V), Id rating (A), and Rds(on) (mΩ).",
+          "What is the gate drive voltage (V), peak gate current (A), and gate resistor value (Ω) for turn-on and turn-off?",
+          "What is the measured switching loss (µJ per transition) at the nominal operating point?",
+          "How is dead-time set and what is its value (ns)? Describe the body diode conduction period and its effect on efficiency.",
+          "What protection circuits are implemented (OVP trip level V, OCP trip level A, OTP trip °C, SCP response time µs)?"
+        ]
+      },
+      {
+        "name": "Thermal Management",
+        "questions": [
+          "What is the junction-to-ambient thermal resistance (°C/W) for each power device including the heatsink, TIM, and PCB spreading resistance?",
+          "What is the maximum junction temperature (°C) at full load and maximum ambient temperature? Provide the thermal derating curve.",
+          "What thermal interface material (TIM) is used and what is its thermal conductivity (W/mK) and bond-line thickness (mm)?",
+          "How is airflow provided (natural convection, forced air, liquid cooling)? State the airflow rate (CFM or L/min) and inlet temperature (°C)."
+        ]
+      },
+      {
+        "name": "EMI Filter & Compliance",
+        "questions": [
+          "What is the conducted EMI filter topology (common-mode + differential-mode stages)? Provide the schematic with component values.",
+          "What regulatory standards must be met (CISPR 32, FCC Part 15 Class A/B, CISPR 11)? Provide the measured emission margin (dBµV) at the worst-case frequency.",
+          "What is the common-mode choke inductance (µH) and current rating (A)? Provide the impedance vs. frequency plot.",
+          "What creepage and clearance distances (mm) are required for the isolation barrier? State the working voltage and pollution degree."
+        ]
+      }
+    ]
+  },
+  "digital_fpga_asic": {
+    "triggers": [
+      "FPGA",
+      "ASIC",
+      "digital logic",
+      "RTL",
+      "Verilog",
+      "VHDL",
+      "microcontroller",
+      "microprocessor",
+      "SoC",
+      "DSP",
+      "pipeline",
+      "clock domain",
+      "state machine",
+      "register",
+      "FIFO",
+      "DMA",
+      "memory controller",
+      "cache",
+      "bus architecture"
+    ],
+    "expert_categories": [
+      {
+        "name": "Clock Architecture & Timing",
+        "questions": [
+          "What is the clock tree architecture? List every clock domain, its frequency (MHz), source (PLL, oscillator, external), and the synchronisation method used between domains.",
+          "What are the setup and hold time margins (ps) at the critical path after timing closure? Provide the timing report excerpt for the critical path.",
+          "How is clock domain crossing (CDC) handled? Describe the synchronisation method (2-FF, FIFO, handshake) used for each CDC path.",
+          "What is the PLL configuration (input frequency, feedback divider, output frequency, jitter spec in ps RMS)?",
+          "What is the maximum operating frequency (MHz) achieved in the target device after place-and-route, and at what temperature and voltage corner?"
+        ]
+      },
+      {
+        "name": "Resource Utilisation & Architecture",
+        "questions": [
+          "What is the resource utilisation on the target device: LUT%, FF%, BRAM%, DSP48%, and I/O% ? Provide the implementation report.",
+          "Provide a block diagram showing all major functional blocks, their interfaces (bus width, protocol), and the data path through the design.",
+          "What pipeline depth (stages) is used for the critical datapath? What is the latency (clock cycles) from input to output?",
+          "What is the on-chip memory architecture (BRAM, URAM, distributed RAM)? State the depth, width, and read/write port configuration.",
+          "What synthesis tool, P&R tool, and device family/speed grade are targeted? Provide the full part number."
+        ]
+      },
+      {
+        "name": "Reset, Power, & Debug",
+        "questions": [
+          "What is the reset strategy (synchronous, asynchronous, power-on-reset)? What is the reset de-assertion sequence and how are all flip-flops initialised?",
+          "What power domains exist and how is power sequencing managed? Provide the supply voltage levels (V) and current consumption (mA) for each domain.",
+          "What debug and observability features are implemented (JTAG, ILA, ChipScope, UART console)? Describe the test coverage.",
+          "What is the configuration bitstream size (Mb) and configuration time (ms) for FPGA-based designs? Describe the configuration interface (JTAG, SPI, BPI)."
+        ]
+      }
+    ]
+  },
+  "sensor_signal_acquisition": {
+    "triggers": [
+      "\\bsensor interface\\b",
+      "\\bsignal acquisition\\b",
+      "\\bdata acquisition\\b",
+      "\\banalog.to.digital\\b",
+      "\\bADC\\b",
+      "\\bmeasurement system\\b",
+      "\\btransducer\\b",
+      "\\baccelerometer\\b",
+      "\\bgyroscope\\b",
+      "\\bpressure sensor\\b",
+      "\\btemperature sensor\\b",
+      "\\bcurrent sensing\\b",
+      "\\bstrain gauge\\b",
+      "\\bMEMS sensor\\b",
+      "\\binstrumentation amplifier\\b",
+      "\\bsignal conditioning circuit\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Sensor & Transducer Specification",
+        "questions": [
+          "What sensor type and sensing principle are used? Provide the full part number, manufacturer, and datasheet reference.",
+          "What is the sensor full-scale range, sensitivity (mV/unit or mA/unit), and linearity error (% FSR)?",
+          "What is the sensor output impedance (Ω) and how does it vary over the measurement range and temperature?",
+          "What is the sensor noise spectral density (nV/√Hz or µg/√Hz) and noise floor over the signal bandwidth?",
+          "What are the sensor supply voltage (V), quiescent current (µA), and operating temperature range (°C)?"
+        ]
+      },
+      {
+        "name": "Analog Front-End & ADC",
+        "questions": [
+          "What is the analog front-end topology (instrumentation amplifier, PGA, buffer)? Provide the schematic with component values and gain setting.",
+          "What anti-aliasing filter order, topology (Butterworth, Bessel), and -3 dB cutoff frequency (Hz) are used?",
+          "What ADC architecture (SAR, sigma-delta, pipeline), resolution (bits), sampling rate (SPS), and SNR (dB) are specified?",
+          "What is the ADC input referred noise (µV RMS) over the signal bandwidth, and how does it relate to the LSB size (µV)?",
+          "What voltage reference is used? Provide the reference voltage (V), initial accuracy (ppm), and temperature coefficient (ppm/°C)."
+        ]
+      },
+      {
+        "name": "Calibration & Accuracy",
+        "questions": [
+          "What calibration procedure is applied (offset null, gain correction, multi-point linearisation)? Describe the calibration stimulus and acceptance criteria.",
+          "What is the end-to-end system accuracy (% FSR) over the operating temperature range after calibration?",
+          "What is the common-mode rejection ratio (CMRR in dB) at DC and at the highest signal frequency?",
+          "How is electromagnetic interference (EMI) shielding implemented on the sensor and front-end board? Provide the shielding effectiveness (dB)."
+        ]
+      }
+    ]
+  },
+  "wireless_communication": {
+    "triggers": [
+      "\\bwireless\\b",
+      "\\bRF transmit\\b",
+      "\\bradio frequency\\b",
+      "\\bantenna\\b",
+      "\\bBluetooth\\b",
+      "\\bWi.?Fi\\b",
+      "\\bLoRa\\b",
+      "\\bZigbee\\b",
+      "\\b5G\\b",
+      "\\bLTE\\b",
+      "\\bNFC\\b",
+      "\\bUWB\\b",
+      "\\bRFID\\b",
+      "\\bradar\\b",
+      "\\btransceiver\\b",
+      "\\blink budget\\b",
+      "\\bmodulation scheme\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "RF & Link Budget",
+        "questions": [
+          "What is the carrier frequency (MHz or GHz), channel bandwidth (MHz), and regulatory band (ISM, licensed, unlicensed)?",
+          "What is the modulation scheme (BPSK, QPSK, QAM, FSK, LoRa SF), coding rate, and resulting spectral efficiency (bps/Hz)?",
+          "Provide the complete link budget table: TX power (dBm), cable loss (dB), TX antenna gain (dBi), path loss model and distance (m), RX antenna gain (dBi), noise figure (dB), required SNR (dB), and resulting fade margin (dB).",
+          "What is the receiver sensitivity (dBm) at the specified data rate and packet error rate (PER)?",
+          "What regulatory certification is required (FCC, CE, IC, MIC)? What is the maximum conducted and EIRP power (dBm)?"
+        ]
+      },
+      {
+        "name": "Antenna Design",
+        "questions": [
+          "What antenna type is used (dipole, patch, chip antenna, PCB trace)? Provide the radiation pattern, gain (dBi), and -10 dB bandwidth (MHz).",
+          "What is the antenna input impedance (Ω) and return loss / VSWR at the operating frequency? Provide the measured S11 plot.",
+          "What matching network topology and component values are used between the RF IC and antenna?",
+          "How is antenna placement, ground plane size, and keep-out zone defined relative to the PCB? Provide the PCB layout constraints."
+        ]
+      },
+      {
+        "name": "Protocol Stack & Performance",
+        "questions": [
+          "What protocol standard is implemented (IEEE 802.15.4, 802.11, Bluetooth 5.x, proprietary)? Which stack layers are novel?",
+          "What is the maximum over-the-air throughput (kbps or Mbps) and the application-layer throughput after protocol overhead?",
+          "What is the end-to-end latency (ms) from sensor event to server reception at maximum data rate?",
+          "How is interference mitigation implemented (FHSS, DSSS, LBT, adaptive power control)? Provide the measured coexistence performance."
+        ]
+      }
+    ]
+  },
+  "motor_actuator_drive": {
+    "triggers": [
+      "\\bmotor drive\\b",
+      "\\bmotor controller\\b",
+      "\\bBLDC\\b",
+      "\\bbrushless motor\\b",
+      "\\bstepper motor\\b",
+      "\\bservo motor\\b",
+      "\\bmotor inverter\\b",
+      "\\bH.bridge\\b",
+      "\\bmotor control\\b",
+      "\\bcommutation\\b",
+      "\\bfield.oriented control\\b",
+      "\\bFOC\\b",
+      "\\bvector control\\b",
+      "\\bPWM drive\\b",
+      "\\bactuator drive\\b",
+      "\\bsolenoid driver\\b",
+      "\\bpiezo driver\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Motor & Mechanical Interface",
+        "questions": [
+          "What motor type (BLDC, PMSM, stepper, DC brush, SRM) and rated specifications (voltage V, current A, speed RPM, torque Nm, power W) are used?",
+          "What is the motor winding configuration (star/delta), number of poles, and back-EMF constant Ke (V/RPM)?",
+          "What position/velocity sensor is used (encoder lines/rev, resolver, Hall effect, sensorless)? Provide the resolution (counts/rev) and electrical interface."
+        ]
+      },
+      {
+        "name": "Drive Topology & Control Loop",
+        "questions": [
+          "What power stage topology is used (3-phase full bridge, H-bridge, half-bridge)? Provide the schematic with device part numbers and ratings.",
+          "What PWM frequency (kHz) is used and what is the resulting current ripple (A peak-to-peak) at maximum speed and torque?",
+          "Describe the complete control loop structure: outer (position/speed) loop bandwidth (Hz), inner (current) loop bandwidth (Hz), and the controller type (PI, PID, deadbeat, predictive).",
+          "What is the measured step response: overshoot (%), settling time (ms), and steady-state error for a speed step from 10% to 90% of rated speed?",
+          "How is field-oriented control (FOC) or commutation implemented? Provide the Park/Clarke transformation block diagram and SVPWM algorithm."
+        ]
+      },
+      {
+        "name": "Protection & Safety",
+        "questions": [
+          "What motor protection functions are implemented: overcurrent (A trip threshold, response time µs), overvoltage (V), undervoltage (V), overtemperature (°C), stall detection?",
+          "What is the safe-state behaviour on a fault: immediate disable, regenerative braking, controlled deceleration? Provide the fault response timing."
+        ]
+      }
+    ]
+  },
+  "embedded_firmware": {
+    "triggers": [
+      "\\bfirmware\\b",
+      "\\bembedded software\\b",
+      "\\bRTOS\\b",
+      "\\bbare.metal\\b",
+      "\\bmicrocontroller firmware\\b",
+      "\\binterrupt.driven\\b",
+      "\\bbootloader\\b",
+      "\\bdevice driver\\b",
+      "\\bHAL layer\\b",
+      "\\bWCET\\b",
+      "\\btask scheduler\\b",
+      "\\bwatchdog timer\\b",
+      "\\bsafe state\\b",
+      "\\bIEC 61508\\b",
+      "\\bISO 26262\\b",
+      "\\bDO.178\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "RTOS & Task Architecture",
+        "questions": [
+          "Is the software bare-metal or does it run on an RTOS? If RTOS, state the name, version, and license (FreeRTOS, Zephyr, VxWorks, QNX).",
+          "List every task/thread: name, priority level, stack size (bytes), periodicity (ms) or event trigger, and worst-case execution time (WCET in µs).",
+          "What is the scheduler type (preemptive, cooperative, EDF)? Prove schedulability: sum of utilisation factors ≤ ln2 for RM or provide EDF feasibility analysis.",
+          "What is the interrupt latency (µs) from hardware assertion to ISR entry for the highest-priority interrupt? How is this measured?",
+          "How is stack overflow detection implemented (canary, MPU guard region, runtime check)?"
+        ]
+      },
+      {
+        "name": "Memory Map & Boot Sequence",
+        "questions": [
+          "Provide the complete memory map: start address, size (kB), and content for each region (flash, RAM, EEPROM, peripheral registers, bootloader).",
+          "What is the boot sequence from power-on-reset to application entry point? List each stage, its duration (ms), and what is verified at each step.",
+          "How is firmware updated in the field (OTA, UART, USB, JTAG)? Describe the image authentication, CRC check, and rollback mechanism.",
+          "What watchdog configuration is used (window watchdog, independent watchdog)? State the timeout period (ms) and the kick interval (ms)."
+        ]
+      },
+      {
+        "name": "Safety & Functional Safety",
+        "questions": [
+          "What functional safety standard applies (IEC 61508 SIL level, ISO 26262 ASIL level, DO-178C software level)?",
+          "What safety mechanisms are implemented: CRC on configuration data, memory ECC, CPU self-test, redundant calculation, plausibility check?",
+          "What is the safe-state definition? How does the system detect a fault and transition to safe state? What is the fault reaction time (ms)?",
+          "What static analysis tool (Polyspace, LDRA, PC-lint) and coverage metric (MC/DC %) are used?"
+        ]
+      }
+    ]
+  },
+  "algorithm_method_patent": {
+    "triggers": [
+      "\\balgorithm\\b",
+      "\\bcomputational method\\b",
+      "\\bcomputer.implemented method\\b",
+      "\\bsorting algorithm\\b",
+      "\\bsearch algorithm\\b",
+      "\\boptimisation algorithm\\b",
+      "\\bcompression algorithm\\b",
+      "\\bencryption algorithm\\b",
+      "\\bscheduling algorithm\\b",
+      "\\brouting algorithm\\b",
+      "\\bparsing method\\b",
+      "\\bpattern matching\\b",
+      "\\bheuristic\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Algorithm Specification & Completeness",
+        "questions": [
+          "Provide a complete pseudocode or structured flowchart for the claimed method, including every decision branch, loop termination condition, and exception path.",
+          "What are the exact inputs (name, data type, value range, units) and outputs (name, data type, value range) for each claimed step?",
+          "What is the worst-case time complexity O(?) and space complexity O(?) as a function of the key input parameter n? Provide the derivation.",
+          "What alternative embodiments exist? Specifically: can any claimed step be omitted or reordered without defeating the purpose of the invention?",
+          "What are the edge cases (empty input, maximum-size input, degenerate input) and how does the algorithm behave in each case?"
+        ]
+      },
+      {
+        "name": "Implementation Reproducibility",
+        "questions": [
+          "What programming language, compiler version, and library dependencies are required to reproduce the claimed results?",
+          "What hardware platform (CPU architecture, clock speed, RAM) and operating system were used for any reported benchmark results?",
+          "If results depend on floating-point arithmetic, what precision (float32, float64) and rounding mode are required for reproducibility?",
+          "What is the claimed performance improvement (%, speedup, or accuracy gain) vs. the prior art baseline? Provide the benchmark methodology and dataset."
+        ]
+      }
+    ]
+  },
+  "machine_learning_ai": {
+    "triggers": [
+      "\\bmachine learning\\b",
+      "\\bneural network\\b",
+      "\\bdeep learning\\b",
+      "\\bAI model\\b",
+      "\\bclassifier model\\b",
+      "\\bgenerative model\\b",
+      "\\btransformer model\\b",
+      "\\bconvolutional\\b",
+      "\\bCNN\\b",
+      "\\bRNN\\b",
+      "\\bLSTM\\b",
+      "\\b GAN\\b",
+      "\\bdiffusion model\\b",
+      "\\btraining dataset\\b",
+      "\\bmodel inference\\b",
+      "\\bfeature extraction\\b",
+      "\\bobject detection\\b",
+      "\\bnatural language processing\\b",
+      "\\bNLP\\b",
+      "\\bcomputer vision\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Model Architecture",
+        "questions": [
+          "Provide a complete architecture diagram: list every layer type (Conv2D, Linear, Attention, BatchNorm), its configuration (kernel size, stride, channels, heads), and the number of trainable parameters in each layer.",
+          "What is the total model size in trainable parameters and in storage (MB for float32 weights)?",
+          "What activation functions are used in each stage and why were they chosen over alternatives?",
+          "What is the input format (shape, dtype, normalisation range) and output format (shape, dtype, meaning of each output element)?",
+          "For transformer-based models: what is the context window length (tokens), embedding dimension, number of heads, and number of layers?"
+        ]
+      },
+      {
+        "name": "Training Data & Process",
+        "questions": [
+          "What dataset was used for training (name, version, size in samples, and source/licence)? How was the train/validation/test split performed?",
+          "What data augmentation or preprocessing steps were applied? List each transformation and the probability or magnitude applied.",
+          "What loss function, optimiser (SGD, Adam, AdamW), learning rate schedule, and batch size were used? Provide all hyperparameters.",
+          "What stopping criterion and number of training epochs were used? Provide the learning curve (loss vs. epoch for train and validation).",
+          "How is the training reproducible? State the random seeds, hardware (GPU model, VRAM GB), and framework (PyTorch/TensorFlow version) used."
+        ]
+      },
+      {
+        "name": "Evaluation & Deployment",
+        "questions": [
+          "What evaluation metric(s) are reported (accuracy, F1, mAP, BLEU, FID)? Provide the numerical result on the held-out test set with confidence interval.",
+          "What is the inference latency (ms) and throughput (samples/s) on the target hardware? Specify the hardware and batch size used for measurement.",
+          "What post-training optimisations are applied (quantisation INT8/INT4, pruning, distillation)? Quantify the accuracy-efficiency trade-off.",
+          "What is the minimum hardware requirement for deployment (RAM MB, compute TFLOPS, storage MB)?"
+        ]
+      }
+    ]
+  },
+  "communication_protocol": {
+    "triggers": [
+      "\\bapplication protocol\\b",
+      "\\blayer protocol\\b",
+      "\\bmessage format\\b",
+      "\\bdistributed system\\b",
+      "\\bpeer.to.peer\\b",
+      "\\bclient.server protocol\\b",
+      "\\bMQTT\\b",
+      "\\bCoAP\\b",
+      "\\bCAN bus protocol\\b",
+      "\\bModbus\\b",
+      "\\bhandshake protocol\\b",
+      "\\backnowledgement scheme\\b",
+      "\\bstate machine protocol\\b",
+      "\\bpacket format\\b",
+      "\\bframe format\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Message Format & State Machine",
+        "questions": [
+          "Provide a complete message format specification: for every message type, list each field name, data type, size (bytes or bits), byte order (big/little endian), and permitted values.",
+          "Provide a complete state machine diagram for each communicating entity showing all states, all transitions (event/condition → action), and all error transitions.",
+          "What is the handshake sequence for connection establishment and teardown? Provide a sequence diagram with timing annotations (ms).",
+          "How are message boundaries delimited (fixed length, length field, delimiter byte, framing)? Provide the framing algorithm."
+        ]
+      },
+      {
+        "name": "Reliability & Ordering Guarantees",
+        "questions": [
+          "What delivery guarantee is provided: at-most-once, at-least-once, or exactly-once? Describe the acknowledgement and deduplication mechanism.",
+          "What ordering guarantee is provided (FIFO per sender, causal, total order)? Describe how ordering is enforced.",
+          "What is the retry policy: maximum retry count, backoff algorithm (linear, exponential), and maximum retry window (s)?",
+          "What is the maximum message size (bytes) and how are larger payloads fragmented and reassembled?"
+        ]
+      },
+      {
+        "name": "Performance & Security",
+        "questions": [
+          "What is the maximum throughput (messages/s or Mbps) and what is the measured end-to-end latency (ms) at 50th, 95th, and 99th percentile?",
+          "What authentication mechanism is used (TLS, DTLS, shared key, certificate)? State the cipher suite and key length.",
+          "How does the protocol behave under packet loss rates of 1%, 5%, and 10%? Provide measured throughput and latency degradation."
+        ]
+      }
+    ]
+  },
+  "database_data_structure": {
+    "triggers": [
+      "database",
+      "data structure",
+      "index",
+      "B-tree",
+      "hash table",
+      "graph database",
+      "key-value store",
+      "time series database",
+      "schema",
+      "query",
+      "transaction",
+      "SQL",
+      "NoSQL",
+      "data model",
+      "storage engine",
+      "cache",
+      "data compression"
+    ],
+    "expert_categories": [
+      {
+        "name": "Schema & Data Model",
+        "questions": [
+          "Provide the complete schema: for every entity/table, list field names, data types, nullable, default values, primary key, and foreign key relationships.",
+          "What indexing strategy is used? For each index, state the indexed fields, index type (B-tree, hash, full-text, spatial), and the queries it is designed to accelerate.",
+          "What is the storage format (row-oriented, columnar, document, graph adjacency list)? What is the on-disk size per record at the claimed scale?"
+        ]
+      },
+      {
+        "name": "Query Performance & Consistency",
+        "questions": [
+          "What is the asymptotic complexity O(?) for each claimed operation (insert, lookup, update, delete, range query) as a function of dataset size n?",
+          "What transaction isolation level is provided (READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALISABLE)? How are conflicts detected and resolved?",
+          "What is the measured query latency (ms) at p50, p95, p99 for the primary claimed operation at the stated dataset size? Provide the benchmark methodology.",
+          "What sharding or partitioning strategy is used? How are data rebalanced when nodes are added or removed?"
         ]
       }
     ]

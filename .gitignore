@@ -1,3 +1,12 @@
 projects/
 patent_rag/
 versions/
+temp/
+kb/
+chromadb_store/
+project.json
+__pycache__/
+*.pyc
+*.pyo
+.env
+
