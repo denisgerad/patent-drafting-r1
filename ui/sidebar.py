@@ -206,7 +206,9 @@ def _render_draft1_uploader(project_path: Optional[str]) -> None:
 
     meta = st.session_state.get("project_metadata", {})
     if meta.get("draft1_uploaded") and project_path:
-        st.success("✅ Draft1 already uploaded for this project")
+        chunk_count = len(st.session_state.get("draft1_chunks", []))
+        chunk_label = f" – {chunk_count} chunks indexed" if chunk_count else ""
+        st.success(f"✅ Draft1 uploaded{chunk_label}")
         if st.button("🔄 Re-upload Draft1"):
             st.session_state.draft1_processed = False
             st.rerun()
@@ -267,9 +269,12 @@ def _process_draft1(uploaded_file, project_path: Optional[str]) -> None:
         st.session_state.draft1_collection  = col
         st.session_state.draft1_processed   = True
         st.session_state.processed          = True
+        # Update session metadata so the banner shows immediately after rerun
+        if "project_metadata" in st.session_state:
+            st.session_state.project_metadata["draft1_uploaded"] = True
 
         gc.collect()
-        st.success(f"✅ {uploaded_file.name} – {len(chunks)} chunks indexed")
+        st.toast(f"✅ {uploaded_file.name} – {len(chunks)} chunks indexed", icon="✅")
         st.rerun()
 
 

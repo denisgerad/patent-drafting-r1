@@ -265,95 +265,53 @@ Discard any question that cannot be traced to the invention or its stated applic
     )
     prefilled_novelty_line = 'NOVELTY (verbatim): "NOT STATED — no formal novelty statement in document"'
 
+    # Extract document title from first non-blank line of context
+    doc_title = ""
+    for line in context.strip().splitlines():
+        line = line.strip()
+        if line and len(line) > 10:
+            doc_title = line
+            break
+
     description = f"""
-You are a senior patent expert conducting a 35 U.S.C. Section 112 enablement review.
-Patent Domain: {patent_type}
+You are a senior patent examiner conducting a technical enablement review under 35 U.S.C. § 112.
 
-=== DOCUMENT TO ANALYSE ===
+╔══════════════════════════════════════════════════════════════════╗
+  PATENT UNDER REVIEW : {doc_title}
+  FIELD OF INVENTION  : {field_core if field_core else "(see document)"}
+  PATENT DOMAIN       : {patent_type}
+╚══════════════════════════════════════════════════════════════════╝
+
+DOCUMENT (read every word before generating output):
+=== BEGIN DOCUMENT ===
 {context}
-===========================
-{field_anchor_block}
-{checklist_block}
-The field of invention has been pre-extracted from the document. Begin your response
-with EXACTLY these two lines (copy them verbatim, do not change them):
+=== END DOCUMENT ===
 
+⚠ REMINDER: The patent above is about "{field_core[:180] if field_core else doc_title}".
+Every theme and every question MUST be about THIS invention and no other.
+{focus_hint}{prohibition_block}{checklist_block}
+TASK — Generate a technical enablement gap analysis for the patent above.
+
+Step 1: Identify 3–5 technical themes that name the invention's OWN sub-systems
+  or aspects as described in THIS document. Use concrete names drawn from the text.
+
+Step 2: For each theme write 3–5 questions that:
+  • Reference a specific gap or missing detail in the document above
+  • Ask for numeric values, governing equations, test procedures, or drawings
+  • Are traceable to a phrase actually present in the document
+  • Do NOT ask about surrounding products or platforms unless explicitly claimed
+{units_note}
+Start your response with EXACTLY these two lines — do not alter them:
 {prefilled_field_line}
 {prefilled_novelty_line}
 
-Then immediately proceed to generate the enablement questions below.
-Do NOT re-extract, re-analyse, or rewrite the FIELD or NOVELTY lines.
-
-STEP 1 — Identify Gaps: Invention Core + Application Context (BOTH required)
-
-PART A — The Invention Itself:
-  What technical details are MISSING that a skilled person needs to build
-  or replicate the stated invention?
-  Ask about the invention's own materials, geometry, fabrication, and performance.
-  Do NOT ask about the host device unless the interface is explicitly claimed as novel.
-
-  CORRECT vs WRONG scope:
-    Field: "a flexible polymer resistive heater film bonded to an LCD"
-    WRONG: "What is the LCD panel resolution?"             <- host device
-    WRONG: "What is the LCD backlight voltage?"            <- host device
-    CORRECT: "What is the polymer base material, thickness, and glass-transition temperature?"
-    CORRECT: "What is the heating element track width, spacing, and sheet resistivity?"
-    CORRECT: "What adhesive or bonding method attaches the film to the LCD surface, and what is its thermal conductivity?"
-
-PART B — Application Context (MANDATORY when the field names deployment environments):
-  The field statement names specific deployment environments and use conditions
-  (e.g. avionics, military, condensation/frost). These environments impose
-  additional requirements on the invention. You MUST generate a dedicated theme
-  covering:
-    - Environmental operating range: temperature range (min/max, rate of change),
-      humidity range, altitude, vibration, shock (cite relevant standards, e.g.
-      MIL-STD-810, DO-160, IEC 60068)
-    - Condensation / frost scenario: at what delta-T does condensation form?
-      What surface temperature must the heater maintain to prevent it?
-      What is the required heat flux (W/m2) at worst-case ambient?
-    - Power and control: how is heater activation triggered? What sensor
-      (temperature, humidity, dew-point) controls it? What is the response time?
-    - Qualification and safety: what test methods verify the heater meets
-      environmental standards? What are the dielectric strength and insulation
-      resistance requirements for the deployment environment?
-{focus_hint}{prohibition_block}
-STEP 2 — Derive 3 to 5 Theme Names
-Name themes after the invention's own sub-systems AND deployment context.
-REQUIRED themes (always include these two if the field names deployment environments):
-  1. One theme covering the invention's physical construction (materials, geometry, fabrication)
-  2. One theme named "Environmental Qualification and Operational Requirements" OR similar
-     — this covers deployment environments, condensation/frost prevention, and standards
-
-Additional themes derived from the document's own gaps:
-  Good: "Heating Element Geometry and Resistivity"
-  Good: "Film-to-Display Bonding and Interface Properties"
-  Good: "Power Delivery and Thermal Control Logic"
-  Bad:  "Specifications"  (too generic)
-  Bad:  "Components"      (too generic)
-
-STEP 3 — Write 3 to 5 Questions per Theme
-Each question MUST:
-  - Be traceable to a specific gap in the stated field/novelty
-  - Request drawings, governing equations, numeric ranges, test procedures,
-    or comparative performance data
-  - NOT ask about the surrounding product unless the patent explicitly claims
-    the interface between invention and product as novel
-  - NOT use vague phrasing — name the specific element to describe
-{units_note}
-
-OUTPUT FORMAT (strict):
-First two lines (already provided above — copy them exactly as given):
-  FIELD (verbatim): "..."
-  NOVELTY (verbatim): "..."
-
-Then blank line, then grouped questions:
-
+Then grouped questions:
 [Theme Name 1]
-1. [Specific question]
-2. [Specific question]
-3. [Specific question]
+1. ...
+2. ...
 
 [Theme Name 2]
-1. [Specific question]
+1. ...
 ...
 """
 
@@ -361,11 +319,9 @@ Then blank line, then grouped questions:
         description=description,
         agent=scrutinizer,
         expected_output=(
-            "Two pre-filled header lines (FIELD and NOVELTY verbatim, as provided). "
-            f"Then 3-5 named technical theme sections, including one mandatory "
-            f"'Environmental Qualification and Operational Requirements' theme when "
-            f"the field names deployment environments. Each theme has 3-5 "
-            f"enablement questions grounded in the {patent_type} document."
+            f"Two verbatim header lines (FIELD and NOVELTY as provided), "
+            f"then 3-5 named theme sections with 3-5 enablement questions each, "
+            f"all grounded in the {patent_type} document content."
         ),
     )
 
