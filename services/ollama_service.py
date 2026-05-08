@@ -169,3 +169,17 @@ class OllamaService:
             return False, f"crewai.LLM construction failed: {exc}"
 
         return True, "LLM stack OK"
+
+
+# ── Provider-agnostic model resolver ─────────────────────────────────────────
+
+def get_model_string() -> str:
+    """
+    Return the CrewAI/litellm-compatible model string for the configured provider.
+
+    - Mistral API mode  →  ``mistral/mistral-large-latest``  (litellm prefix)
+    - Ollama mode       →  ``ollama/<model>``                (existing resolver)
+    """
+    if cfg.LLM_PROVIDER == "mistral_api":
+        return f"mistral/{cfg.MISTRAL_ORCHESTRATOR_MODEL}"
+    return OllamaService().resolve_model()

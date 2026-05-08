@@ -58,7 +58,11 @@ def build_scrutinizer(
 
     return Agent(
         role=role,
-        goal="Identify the technical parameters required to meet the 35 U.S.C. 112 'Enablement' standard.",
+        goal=(
+            "Identify the technical parameters required to meet the 35 U.S.C. 112 'Enablement' standard. "
+            "A pre-analysed GAP LIST is provided in the task — treat every item in that list as a mandatory "
+            "question target. Do not ask questions already answered by the gap list."
+        ),
         backstory=backstory,
         llm=llm_model,
         verbose=True,

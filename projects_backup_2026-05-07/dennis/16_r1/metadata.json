@@ -1,0 +1,24 @@
+{
+  "project_name": "16_r1",
+  "patent_type": "Electronics",
+  "created": "2026-05-06 08:34:12",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Optics / Display",
+      "secondary_domains": [
+        "Electronics"
+      ],
+      "confidence": 0.85,
+      "justification": "The invention is applicable to display systems used in avionics cockpit displays, military vehicle displays, naval systems, industrial control displays, outdoor information displays, and transportation displays where long-term brightness stability is critical. The system architecture includes a backlight LED array and temperature monitoring unit, indicating that the technical focus is on display and optics components.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Optics / Display"
+  }
+}

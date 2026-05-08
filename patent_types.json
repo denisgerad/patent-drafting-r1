@@ -85,7 +85,13 @@
       "Do NOT ask about server hardware specifications unless the hardware architecture is the novel contribution",
       "Do NOT ask vague 'how does the system work' questions — demand pseudocode, state diagrams, or data schemas",
       "Do NOT ask about the application domain (e.g. healthcare, finance) — ask about the technical claim",
-      "For ML patents: do NOT accept 'neural network' as sufficient — demand architecture, layer types, and training details"
+      "For ML patents: do NOT accept 'neural network' as sufficient — demand architecture, layer types, and training details",
+      "Do not ask what an LLM is — assume the reader knows. Ask about THIS system's specific LLM configuration.",
+      "Do not ask about training data unless the document claims a custom-trained model.",
+      "Do not ask what performance value was achieved in testing — ask for the TARGET metric and the CONDITIONS under which it must be met.",
+      "Do not ask about training data sources unless the document explicitly claims a custom-trained model — ask instead whether the model is a named third-party model or custom, and what is required to reproduce it.",
+      "Do not ask about hardware or OS requirements in generic terms — ask specifically whether on-device or edge deployment is within the claimed scope, or only cloud inference.",
+      "Do not ask about scalability under load — ask for the maximum concurrent session count the invention claims to support and the architectural mechanism that enforces that ceiling."
     ]
   },
 

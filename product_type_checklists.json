@@ -551,7 +551,15 @@
       "\\bobject detection\\b",
       "\\bnatural language processing\\b",
       "\\bNLP\\b",
-      "\\bcomputer vision\\b"
+      "\\bcomputer vision\\b",
+      "\\bLLM\\b",
+      "\\blarge language model\\b",
+      "\\bmultimodal\\b",
+      "\\bgenerative AI\\b",
+      "\\btransformer\\b",
+      "\\bfoundation model\\b",
+      "\\bRAG\\b",
+      "\\bretrieval.augmented\\b"
     ],
     "expert_categories": [
       {
@@ -581,6 +589,72 @@
           "What is the inference latency (ms) and throughput (samples/s) on the target hardware? Specify the hardware and batch size used for measurement.",
           "What post-training optimisations are applied (quantisation INT8/INT4, pruning, distillation)? Quantify the accuracy-efficiency trade-off.",
           "What is the minimum hardware requirement for deployment (RAM MB, compute TFLOPS, storage MB)?"
+        ]
+      }
+    ]
+  },
+  "tv_content_discovery_llm": {
+    "require_all_triggers": false,
+    "fixed_theme_names": [
+      "Multimodal LLM Processing Pipeline",
+      "Communication Channel Integration",
+      "Distributed Identity Management",
+      "Cross-Platform Device Control",
+      "Television Content Discovery and Ranking"
+    ],
+    "triggers": [
+      "television.*content discovery|content discovery.*television|\\bTV\\b.*content",
+      "multimodal.*LLM|LLM.*multimodal|large language model.*television"
+    ],
+    "expert_categories": [
+      {
+        "name": "Multimodal Input Processing",
+        "questions": [
+          "What modalities are simultaneously supported (text, voice, image) and what is the per-modality latency budget in ms?",
+          "Is the multimodal LLM a named third-party model (e.g. GPT-4V, Gemini, LLaVA) or a custom-trained model? If custom, what training corpus, objective function, and minimum parameter count are required to reproduce the multimodal reasoning capability?",
+          "How does the system resolve conflicts when different input channels submit contradictory queries for the same session?",
+          "At what stage in the processing pipeline is user data anonymized — before the LLM call, inside the LLM context, or post-response — and what specific technique (tokenization masking, differential privacy, k-anonymity) is applied?"
+        ]
+      },
+      {
+        "name": "Communication Channels",
+        "questions": [
+          "What are the specific communication channels supported (e.g. WhatsApp, SMS, web app, voice assistant)? For each channel, what API or protocol integration is used, and is each channel independently claimed or only the combination?",
+          "What is the message size limit and rate limit enforced per channel, and how are limit violations surfaced to the user?",
+          "How does the system maintain session continuity when a user switches between communication channels mid-interaction?"
+        ]
+      },
+      {
+        "name": "Cross-Platform Identity & Verification",
+        "mandatory": true,
+        "questions": [
+          "What cryptographic algorithm generates the time-limited verification codes, and what is the expiry duration in seconds?",
+          "How is a user's TV-platform identity bound to their messaging-platform identity without storing PII — what is the specific anonymization technique?",
+          "What is the maximum number of platform identities that can be linked per user session, and is there a rate limit on linking attempts?"
+        ]
+      },
+      {
+        "name": "TV Device Control Interface",
+        "questions": [
+          "What protocol (HDMI-CEC, IP-based REST, proprietary SDK) is used to transmit control commands to the TV, and what is the maximum acceptable round-trip command latency in milliseconds?",
+          "Which TV operating systems (webOS, Tizen, Android TV, Roku OS, FireOS) are explicitly supported, and what abstraction layer handles firmware version differences between them?",
+          "How does the system confirm a control command was executed on the TV — ACK mechanism, polling interval, or event callback?"
+        ]
+      },
+      {
+        "name": "Content Discovery & Ranking",
+        "questions": [
+          "At what interval (minutes/hours) is the content metadata catalogue refreshed, and what is the source of truth for catalogue updates?",
+          "What algorithm determines content recommendation ranking — is it rule-based filtering, vector embedding similarity, or a learned reward model — and what input signals does it consume?",
+          "How does the system handle a query that matches zero content items — fallback logic and user-facing response?"
+        ]
+      },
+      {
+        "name": "Inference Compute & Deployment Scope",
+        "questions": [
+          "What is the minimum inference compute requirement for the multimodal LLM component — specifically, can it run on a standard cloud inference endpoint (e.g. 1× A10G GPU), and is on-device or edge deployment within the claimed scope of the invention?",
+          "What is the end-to-end latency budget from user query submission to TV command execution, and how is this measured and validated?",
+          "Which components of the system are stateless and which maintain persistent state — and what persistence mechanism (database, cache, session store) is used for each stateful component?"
         ]
       }
     ]

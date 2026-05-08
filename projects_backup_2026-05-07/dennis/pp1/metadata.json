@@ -1,0 +1,22 @@
+{
+  "project_name": "pp1",
+  "patent_type": "Electronics",
+  "created": "2026-05-06 10:25:43",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Software",
+      "secondary_domains": [],
+      "confidence": 0.85,
+      "justification": "The patent describes a software system architecture and its components, including communication platforms, identity management servers, databases, device control modules, and notification modules. It outlines processes such as initial pairing and identity creation, cross-channel linking, unified device control, and security mechanisms. The use of structured code validation and atomic database operations further supports the software domain.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Software"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "project_name": "p15",
+  "patent_type": "Electronics",
+  "created": "2026-04-15 10:22:49",
+  "user_id": "sarosh",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Optics / Display",
+      "secondary_domains": [],
+      "confidence": 0.85,
+      "justification": "The invention primarily deals with the heating of LCD displays, which is a display-related application. The use of transparent heating functionality and optically clear materials further supports this conclusion.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Optics / Display"
+  }
+}

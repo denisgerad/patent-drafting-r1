@@ -1,0 +1,24 @@
+{
+  "project_name": "multi-channel-llm",
+  "patent_type": "Electronics",
+  "created": "2026-05-06 10:31:29",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": {
+      "primary_domain": "Software",
+      "secondary_domains": [
+        "Chemical"
+      ],
+      "confidence": 0.85,
+      "justification": "The invention involves software processes and algorithms for processing, enriching, and displaying content from multiple communication platforms. It also uses chemical components like structured verification codes to link user identities across platforms.",
+      "success": true,
+      "error": ""
+    },
+    "user_override": false,
+    "final_domain": "Software"
+  }
+}

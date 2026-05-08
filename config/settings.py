@@ -45,3 +45,12 @@ TEMP_DIR: Path          = Path(os.getenv("TEMP_DIR", "./temp"))
 
 # ── CrewAI ────────────────────────────────────────────────────────────────────
 CREW_TIMEOUT_SECONDS: int = int(os.getenv("CREW_TIMEOUT_SECONDS", "300"))
+
+# ── LLM Provider (Ollama local vs Mistral API) ────────────────────────────────
+# Set USE_MISTRAL_API=true in .env to route all LLM calls through the Mistral API
+# instead of the local Ollama instance. Useful for quality benchmarking.
+# ⚠ Set USE_MISTRAL_API=false before processing real patent documents.
+USE_MISTRAL_API: bool            = os.getenv("USE_MISTRAL_API", "false").lower() == "true"
+LLM_PROVIDER: str                = "mistral_api" if USE_MISTRAL_API else "ollama"
+MISTRAL_API_KEY: str             = os.getenv("MISTRAL_API_KEY", "")
+MISTRAL_ORCHESTRATOR_MODEL: str  = os.getenv("MISTRAL_ORCHESTRATOR_MODEL", "mistral-large-latest")

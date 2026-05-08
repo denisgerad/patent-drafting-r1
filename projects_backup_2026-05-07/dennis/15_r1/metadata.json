@@ -1,0 +1,16 @@
+{
+  "project_name": "15_r1",
+  "patent_type": "Electronics",
+  "created": "2026-04-21 06:48:53",
+  "user_id": "dennis",
+  "draft1_uploaded": true,
+  "questions_generated": true,
+  "qa_uploaded": false,
+  "draft2_generated": false,
+  "classification": {
+    "auto_classification": null,
+    "user_override": true,
+    "final_domain": "Optics / Display",
+    "override_reason": "Manual selection"
+  }
+}

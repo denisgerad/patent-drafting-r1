@@ -39,6 +39,10 @@ def _match_product_checklist(field_of_invention: str) -> list[dict]:
     Match the field_of_invention string against product-type trigger patterns.
     Returns list of matched expert_categories (each is {name, questions}).
 
+    Supports two matching modes per checklist entry:
+    - require_all_triggers: true  → ALL triggers must match (AND logic)
+    - require_all_triggers: false → ANY trigger matches (OR logic, default)
+
     This is the KEY mechanism that restores expert-depth questions:
     - field_of_invention provides SCOPE (right topic)
     - product_type_checklists provide DEPTH (right questions for that product type)
@@ -51,15 +55,50 @@ def _match_product_checklist(field_of_invention: str) -> list[dict]:
     for key, entry in checklists.items():
         if key.startswith("_"):
             continue
-        for trigger in entry.get("triggers", []):
-            if re.search(trigger, field_of_invention, re.IGNORECASE):
-                for cat in entry.get("expert_categories", []):
-                    if cat["name"] not in seen_names:
-                        matched_categories.append(cat)
-                        seen_names.add(cat["name"])
-                break  # one trigger match per product type is enough
+        triggers = entry.get("triggers", [])
+        require_all = entry.get("require_all_triggers", False)
+
+        if require_all:
+            matched = bool(triggers) and all(
+                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
+            )
+        else:
+            matched = any(
+                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
+            )
+
+        if matched:
+            logger.info("[CHECKLIST] Matched '%s' for field: %s", key, field_of_invention[:120])
+            for cat in entry.get("expert_categories", []):
+                if cat["name"] not in seen_names:
+                    matched_categories.append(cat)
+                    seen_names.add(cat["name"])
+
+    if not matched_categories:
+        logger.info("[CHECKLIST] No match — using fallback gap checklist for field: %s", field_of_invention[:120])
 
     return matched_categories
+
+
+def _get_fixed_theme_names(field_of_invention: str) -> list[str] | None:
+    """Return the fixed_theme_names list for the first matched checklist entry that has one, or None."""
+    checklists = _load_product_checklists()
+    for key, entry in checklists.items():
+        if key.startswith("_"):
+            continue
+        triggers = entry.get("triggers", [])
+        require_all = entry.get("require_all_triggers", False)
+        if require_all:
+            matched = bool(triggers) and all(
+                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
+            )
+        else:
+            matched = any(
+                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
+            )
+        if matched and entry.get("fixed_theme_names"):
+            return entry["fixed_theme_names"]
+    return None
 
 
 def _rag_query_for_type(patent_type: str) -> str:
@@ -140,6 +179,8 @@ def build_scrutiny_task(
     context: str,
     patent_type: str,
     field_of_invention: str = "",
+    novelty: str = "NOT STATED",
+    document_gaps: str = "",
 ) -> Task:
     """
     Build a scrutiny task firmly anchored to the document's stated field of invention.
@@ -170,8 +211,21 @@ def build_scrutiny_task(
     focus_hint = ""
     if focus_areas:
         bullets = "\n".join(f"    * {a}" for a in focus_areas)
-        focus_hint = f"""
-DOMAIN LENS ({patent_type}) — apply only where the invention's novelty explicitly touches these:
+        if novelty and novelty != "NOT STATED":
+            focus_hint = f"""
+⚠ NOVELTY ANCHOR — READ BEFORE GENERATING QUESTIONS:
+The extracted novelty of THIS invention is:
+  "{novelty}"
+Every theme and every question MUST be traceable to this specific novelty.
+Do NOT generate questions about components or behaviours outside this scope.
+If the checklist above contains questions irrelevant to this novelty, skip them.
+DOMAIN LENS ({patent_type}) — apply only where this novelty explicitly touches these:
+{bullets}
+"""
+        else:
+            focus_hint = f"""
+⚠ NOVELTY ANCHOR — No formal novelty statement was found. Infer the likely novel aspects from the field description and claim structure, and apply these focus areas to those inferred aspects. Do NOT treat absent novelty as permission to ask generic questions — anchor every question to a specific technical gap in THIS document:
+DOMAIN LENS ({patent_type}):
 {bullets}
 """
 
@@ -206,11 +260,25 @@ DOMAIN-SPECIFIC PROHIBITIONS:
             "",
         ]
         for cat in matched_categories:
-            lines.append(f"[{cat['name']}]")
+            mandatory_prefix = ""
+            if cat.get("mandatory"):
+                mandatory_prefix = "\n⚠ MANDATORY — you MUST generate at least one question from this category:\n"
+            lines.append(f"{mandatory_prefix}[{cat['name']}]")
             for q in cat["questions"]:
                 lines.append(f"  EXAMPLE: {q}")
             lines.append("")
         checklist_block = "\n".join(lines)
+    else:
+        checklist_block = """
+MANDATORY DOCUMENT GAP CHECKLIST (no product-type checklist matched):
+For each of the following, ask a question ONLY IF the document does not provide a specific answer:
+- Exact numeric performance targets (latency, throughput, accuracy %)
+- Specific third-party components, APIs, or protocols named
+- Data flow between the primary components described
+- Error handling and fallback behaviour
+- Hardware or OS platform constraints
+Every question must quote or reference a specific passage from the document that reveals the gap.
+"""
 
     # ── Parse field_of_invention into invention core + application context ──────
     # The field statement often has two parts:
@@ -263,7 +331,21 @@ Discard any question that cannot be traced to the invention or its stated applic
         if field_core
         else 'FIELD (verbatim): "NOT FOUND IN DOCUMENT"'
     )
-    prefilled_novelty_line = 'NOVELTY (verbatim): "NOT STATED — no formal novelty statement in document"'
+    if novelty and novelty != "NOT STATED":
+        prefilled_novelty_line = f'NOVELTY (extracted): "{novelty}"'
+    else:
+        prefilled_novelty_line = 'NOVELTY (verbatim): "NOT STATED — no formal novelty statement in document"'
+
+    if document_gaps:
+        document_gaps_block = f"""
+=== DOCUMENT GAP LIST (pre-analysed — mandatory question targets) ===
+The following gaps were identified in this specific document.
+You MUST generate at least one question per GAP item below.
+{document_gaps}
+=== END GAP LIST ===
+"""
+    else:
+        document_gaps_block = ""
 
     # Extract document title from first non-blank line of context
     doc_title = ""
@@ -273,8 +355,28 @@ Discard any question that cannot be traced to the invention or its stated applic
             doc_title = line
             break
 
-    description = f"""
-You are a senior patent examiner conducting a technical enablement review under 35 U.S.C. § 112.
+    # Build Step 1 instruction — use fixed theme names if the matched checklist defines them
+    _fixed_themes = _get_fixed_theme_names(field_of_invention) if field_of_invention else None
+    if _fixed_themes:
+        _theme_list = "\n".join(f"  Theme {i + 1}: {name}" for i, name in enumerate(_fixed_themes))
+        step1_block = (
+            f"Step 1: Generate EXACTLY {len(_fixed_themes)} themes using THESE EXACT NAMES — no substitutions:\n"
+            f"{_theme_list}\n"
+            f"Do NOT replace any of these with Privacy, Security, Error Handling,\n"
+            f"Scalability, or any other topic not in this list.\n"
+            f"If the document does not describe a theme's sub-system in detail, still\n"
+            f"include the theme and ask what is missing — that absence IS the gap."
+        )
+    else:
+        step1_block = (
+            "Step 1: Identify EXACTLY 5 technical themes — one per major sub-system described in the\n"
+            "  Field above. Count the distinct sub-systems named in the Field and Novelty lines;\n"
+            "  assign one theme to each. If the document does not describe a sub-system in detail,\n"
+            "  still create the theme and ask what is missing — that absence IS the gap.\n"
+            "  Use concrete sub-system names drawn verbatim or near-verbatim from the Field text."
+        )
+
+    description = f""" conducting a technical enablement review under 35 U.S.C. § 112.
 
 ╔══════════════════════════════════════════════════════════════════╗
   PATENT UNDER REVIEW : {doc_title}
@@ -287,15 +389,64 @@ DOCUMENT (read every word before generating output):
 {context}
 === END DOCUMENT ===
 
-⚠ REMINDER: The patent above is about "{field_core[:180] if field_core else doc_title}".
+⚠ CRITICAL DOMAIN LOCK:
+This patent is EXCLUSIVELY about: "{field_core[:180] if field_core else doc_title}"
+The word "television" means TV screens and broadcast content — NOT telephone calls.
+The word "channels" means communication platforms (WhatsApp, web, voice) — NOT phone lines.
+If any theme or question references telephone calls, call duration, or IVR systems,
+it is WRONG and must not be generated.
 Every theme and every question MUST be about THIS invention and no other.
-{focus_hint}{prohibition_block}{checklist_block}
+{prohibition_block}{checklist_block}{document_gaps_block}{focus_hint}
+🚫 PROHIBITED QUESTIONS — do not generate any question that:
+  • Asks how many epochs, layers, or parameters the model has
+  • Asks what training data was used (unless document claims custom training)
+  • Asks how often the system is tested, audited, or reviewed
+  • Asks what the evaluation metric or benchmark score is
+  • Can be answered with only "yes" or "no"
+  • Is about general technology category behaviour, not THIS document's gaps
+  • Names a specific ML technique (reinforcement learning, active learning,
+    transfer learning) unless that exact term appears in the document —
+    ask WHAT technique is used instead of naming one
+🚫 TECHNOLOGY ASSUMPTION PROHIBITION:
+  Never name a specific technology, protocol, provider, or architecture
+  in a question unless that exact term appears in the document.
+  WRONG: "Does the system use OAuth or OpenID Connect?"
+  RIGHT: "Which identity provider or protocol does the system use?"
+  WRONG: "Is it an encoder-decoder or transformer architecture?"
+  RIGHT: "What is the architecture of the LLM used?"
+  WRONG: "Are social media accounts used for authentication?"
+  RIGHT: "What identity sources does the system accept?"
+🚫 PROHIBITED THEMES — do not generate a theme named or focused on:
+  • Security, Privacy, or Data Protection (unless explicitly claimed)
+  • Error Handling or Fault Tolerance (unless explicitly claimed)
+  • Compliance, Regulation, or Audit
+Each question must be answerable only by the inventor — not by a textbook.
+
+RE-READ BEFORE GENERATING:
+Field: {field_core[:300] if field_core else doc_title}
+Novelty: {novelty[:200] if novelty and novelty != "NOT STATED" else "not stated — infer from field"}
+
+TERM DEFINITIONS FOR THIS DOCUMENT ONLY:
+- "multimodal" = text + image + audio processed simultaneously by an LLM
+                  NOT "multiphone", NOT voice-only, NOT telephone commands
+- "communication channels" = platforms (WhatsApp, web app, REST API)
+                              NOT phone lines, NOT voice channels
+- "LLM" = large language model for content understanding
+           NOT a speech recognition engine
+
+THEME NAMING RULE — MANDATORY:
+Each theme name MUST be taken from a component, sub-system, or process
+named in the Field or Novelty above.
+BANNED theme names: "Theme 1", "Theme Name 1", "Technical Theme",
+                    "System Architecture", "Overview"
+Use terms drawn verbatim or near-verbatim from: "{field_core[:120] if field_core else doc_title}"
+Every theme name must use a term from the Field or Novelty lines above.
+
 TASK — Generate a technical enablement gap analysis for the patent above.
 
-Step 1: Identify 3–5 technical themes that name the invention's OWN sub-systems
-  or aspects as described in THIS document. Use concrete names drawn from the text.
+{step1_block}
 
-Step 2: For each theme write 3–5 questions that:
+Step 2: For each theme write EXACTLY 3 to 5 questions (no more, no fewer) that:
   • Reference a specific gap or missing detail in the document above
   • Ask for numeric values, governing equations, test procedures, or drawings
   • Are traceable to a phrase actually present in the document
