@@ -13,6 +13,7 @@ from crewai import Crew
 
 import config.settings as cfg
 from agents.agent_factory import build_consolidator
+from services.cloud_llm_service import get_llm, is_cloud_provider
 from services.ollama_service import OllamaService
 from services.vector_store import search
 from tasks.task_factory import (

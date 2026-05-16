@@ -1,0 +1,129 @@
+{
+  "product_type": "light_guide_plate",
+  "domain": "Optics / Display — Light Guide Plate",
+  "readiness_threshold": 0.65,
+  "category_threshold": 0.5,
+  "_comment": "readiness_threshold: overall weighted score needed to pass (0.0-1.0). category_threshold: minimum score for any single category (0.0-1.0). A document fails if ANY category falls below category_threshold, even if the overall score is above readiness_threshold.",
+  "categories": [
+    {
+      "name": "Structural Design & Optical Architecture",
+      "weight": 0.4,
+      "_comment": "Highest weight — this is where the core novelty lives",
+      "reference_questions": [
+        "Provide drawings (top view, cross-section, ray diagram) showing dual-edge light injection and overall light guide structure.",
+        "Explain the novel dot pattern and light extraction structure, including symmetry/complementary behaviour for dual-edge illumination.",
+        "Describe dot geometry (shape, size variation, depth, spacing) and whether dot size/density changes toward the centre.",
+        "How does dot geometry (shape, size variation, depth, spacing) affect light extraction, and does it change uniformity %?",
+        "Clarify whether the pattern is mathematically defined and provide the governing formula if any."
+      ],
+      "key_terms": [
+        "dot pattern",
+        "extraction pattern",
+        "extraction structure",
+        "dot geometry",
+        "dot size",
+        "dot depth",
+        "dot spacing",
+        "density gradient",
+        "dual-edge",
+        "ray diagram",
+        "cross-section",
+        "top view",
+        "governing formula",
+        "mathematical",
+        "symmetry",
+        "complementary"
+      ],
+      "depth_markers": [
+        "top view",
+        "cross-section",
+        "ray diagram",
+        "µm",
+        "mm",
+        "shape",
+        "size variation",
+        "depth",
+        "spacing",
+        "governing formula",
+        "uniformity %",
+        "density"
+      ]
+    },
+    {
+      "name": "Optical Optimisation & Mode Independence",
+      "weight": 0.35,
+      "reference_questions": [
+        "Explain how dot density and distribution are optimized for dual-edge operation.",
+        "Describe how luminance uniformity is maintained when either source or both sources are active.",
+        "Identify simulation tools and design methodology used for optimization."
+      ],
+      "key_terms": [
+        "dot density",
+        "distribution",
+        "dual-edge",
+        "optimized",
+        "luminance uniformity",
+        "either source",
+        "both sources",
+        "simulation",
+        "simulation tool",
+        "design methodology",
+        "optimization",
+        "mode independence"
+      ],
+      "depth_markers": [
+        "uniformity %",
+        "cd/m²",
+        "simulation tool",
+        "LightTools",
+        "TracePro",
+        "Zemax",
+        "ray-tracing",
+        "optimization",
+        "convergence",
+        "either source",
+        "both sources"
+      ]
+    },
+    {
+      "name": "Material, Fabrication & Performance",
+      "weight": 0.25,
+      "reference_questions": [
+        "Specify material and thickness profile of the universal light guide.",
+        "Describe fabrication method used to realize the extraction pattern.",
+        "Provide measurable performance improvements (uniformity %, efficiency %, thickness reduction, scalability benefits) compared to standard LGP designs."
+      ],
+      "key_terms": [
+        "material",
+        "thickness",
+        "PMMA",
+        "polycarbonate",
+        "glass",
+        "refractive index",
+        "fabrication",
+        "injection moulding",
+        "laser engraving",
+        "embossing",
+        "uniformity %",
+        "efficiency %",
+        "thickness reduction",
+        "compared to",
+        "standard LGP",
+        "prior art"
+      ],
+      "depth_markers": [
+        "mm",
+        "µm",
+        "refractive index",
+        "haze %",
+        "transmittance %",
+        "uniformity %",
+        "efficiency %",
+        "lm/W",
+        "fabrication method",
+        "tolerance",
+        "compared to standard"
+      ]
+    }
+  ]
+}

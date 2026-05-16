@@ -19,6 +19,7 @@ from crewai import Crew
 
 import config.settings as cfg
 from agents.agent_factory import build_classifier
+from services.cloud_llm_service import get_llm, is_cloud_provider
 from services.ollama_service import OllamaService
 from services.vector_store import search
 from tasks.task_factory import build_classification_task, parse_classification_result
@@ -67,18 +68,18 @@ def run(collection, timeout: int = 120) -> ClassificationResult:
     -------
     ClassificationResult – always returns (never raises); check .success
     """
-    # 1. Ensure Ollama is available
-    ollama = OllamaService()
-    try:
-        ollama.ensure_running()
-        llm_model = ollama.resolve_model()
-    except Exception as exc:
-        logger.error("Ollama unavailable for classification: %s", exc)
-        return ClassificationResult(
-            primary_domain="Electronics",
-            success=False,
-            error=f"Ollama unavailable: {exc}",
-        )
+    # 1. Ensure LLM is available
+    if not is_cloud_provider():
+        ollama = OllamaService()
+        try:
+            ollama.ensure_running()
+        except Exception as exc:
+            logger.error("Ollama unavailable for classification: %s", exc)
+            return ClassificationResult(
+                primary_domain="Electronics",
+                success=False,
+                error=f"Ollama unavailable: {exc}",
+            )
 
     # 2. RAG context for classifier
     context = search(
@@ -88,7 +89,7 @@ def run(collection, timeout: int = 120) -> ClassificationResult:
     )
 
     # 3. Build agent + task
-    classifier = build_classifier(llm_model)
+    classifier = build_classifier()
     task       = build_classification_task(classifier, context)
     crew       = Crew(agents=[classifier], tasks=[task], verbose=False)
 

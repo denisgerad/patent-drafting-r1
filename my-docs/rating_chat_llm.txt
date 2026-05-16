@@ -1,0 +1,90 @@
+efore I send the document for domain review the developer must have a basic idea of how good the document is or is it a good document to send for domain review. How do I get a first hand feel (ratings) before I send for domain review?
+
+would it be possible to have something like this?
+
+Patent Draft
+     |
+Document Analyzer
+     |
+-------------------------
+| Completeness Score    |
+| Technical Depth       |
+| Claimability          |
+| Ambiguity             |
+| Hallucination Risk    |
+| Implementation Detail |
+| Terminology Quality   |
+-------------------------
+     |
+Patent Readiness Score
+     |
+Decision:
+- Ready for review
+- Needs clarification
+- Poor quality
+
+Show less
+3:33 PM
+Claude responded: Great idea — absolutely doable.
+
+Architected patent analyzer tool with seven scoring dimensions and readiness decision framework
+Architected patent analyzer tool with seven scoring dimensions and readiness decision framework
+Great idea — absolutely doable. I'll build an AI-powered Patent Readiness Analyzer that takes your draft, calls Claude's API, and produces scored ratings across all 7 dimensions, then delivers a final decision. The document you uploaded is already loaded as the default input.
+
+
+
+Claude's response was interrupted
+You said: I cannot use api because the data is sensitive, draft patent documents and how do I do this with a local model?
+I cannot use api because the data is sensitive, draft patent documents and how do I do this with a local model?
+
+3:35 PM
+Claude responded: Good call — patent drafts are highly sensitive.
+
+Architected local solution using Ollama and Flask for sensitive documents
+Architected local solution using Ollama and Flask for sensitive documents
+Good call — patent drafts are highly sensitive. The right approach here is a local Python app that runs entirely on your machine. Since you're already using Mistral 7B + CrewAI, you likely have Ollama running. Here's exactly how to set it up:
+
+
+Viewed a file, created a file, read a file
+Viewed a file, created a file, read a file
+Single file, runs entirely offline. Here's how to get it going:
+
+Step 1 — make sure Ollama is running
+
+bash
+ollama serve
+ollama pull mistral   # or llama3, phi3, etc.
+Step 2 — install the two Python deps
+
+bash
+pip install flask requests
+Step 3 — run it
+
+bash
+python patent_analyzer.py
+Then open http://localhost:5000 in your browser.
+
+What you get:
+
+The UI is a dark terminal-style dashboard. Paste your draft, hit Analyze, and in ~30–60 seconds (depending on your hardware) you'll see:
+
+Dimension	What it checks
+Completeness	Are all patent sections present?
+Technical depth	Specific numbers, protocols, algorithms vs. vague prose
+Claimability	Are there defensible novel elements?
+Ambiguity clarity	How precise and unambiguous is the language?
+Hallucination risk	Are all assertions grounded / verifiable?
+Implementation detail	Can an engineer build from this description alone?
+Terminology quality	Correct patent language throughout?
+Plus an overall score, a Ready / Needs clarification / Poor quality verdict, and the top 3 issues to fix before handing off for domain review.
+
+To switch models, just change line 22:
+
+python
+OLLAMA_MODEL = "llama3"   # or "phi3", "codellama", "gemma", etc.
+Larger models (13B+) will give more reliable JSON output than 7B.
+
+
+Patent analyzer
+PY 
+

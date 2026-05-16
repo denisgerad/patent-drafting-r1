@@ -1,0 +1,182 @@
+{
+  "product_type": "flexible_heater_film",
+  "domain": "Materials / Electrothermal — Flexible Heater Film",
+  "readiness_threshold": 0.65,
+  "category_threshold": 0.5,
+  "categories": [
+    {
+      "name": "Polymer Film Composition & Form Factor",
+      "weight": 0.25,
+      "reference_questions": [
+        "What is the chemical composition of the flexible polymer substrate — is it PET, PEN, PI, or another polymer? Provide the material grade and supplier.",
+        "What is the substrate thickness (µm) and the minimum bend radius (mm) without cracking or delamination?",
+        "What is the glass transition temperature (°C) and elastic modulus (GPa) of the polymer substrate?",
+        "Does the CTE of the polymer film match the LCD panel substrate? Provide CTE values (ppm/°C) for both.",
+        "What are the overall dimensions (width × height × total thickness in mm) of the heater film as delivered?"
+      ],
+      "key_terms": [
+        "polymer",
+        "substrate",
+        "PET",
+        "PEN",
+        "polyimide",
+        "thickness",
+        "bend radius",
+        "glass transition",
+        "elastic modulus",
+        "CTE",
+        "flexible",
+        "rigid"
+      ],
+      "depth_markers": [
+        "µm",
+        "mm",
+        "°C",
+        "GPa",
+        "ppm/°C",
+        "glass transition temperature",
+        "elastic modulus",
+        "bend radius"
+      ]
+    },
+    {
+      "name": "Heating Element Geometry & Resistivity",
+      "weight": 0.3,
+      "reference_questions": [
+        "What material is the heating element — ITO, silver nanowires, carbon nanotube film, metal mesh, or etched metal foil? Provide the material specification.",
+        "What is the sheet resistivity (Ω/sq) of the heating element at 20°C, and how does it vary across the operating temperature range?",
+        "What is the heating element track width (µm), spacing (µm), and pattern geometry — serpentine, grid, or other? Provide a drawing.",
+        "What is the maximum power density (W/m²) the element delivers without damaging the polymer substrate or adhesive?",
+        "What is the temperature coefficient of resistance (TCR, ppm/°C) and how is this used in the control circuit?"
+      ],
+      "key_terms": [
+        "heating element",
+        "ITO",
+        "resistive",
+        "sheet resistivity",
+        "track width",
+        "serpentine",
+        "grid",
+        "power density",
+        "temperature coefficient",
+        "TCR",
+        "resistance",
+        "geometry"
+      ],
+      "depth_markers": [
+        "Ω/sq",
+        "µm",
+        "W/m²",
+        "ppm/°C",
+        "W/cm²",
+        "sheet resistivity",
+        "track width",
+        "power density"
+      ]
+    },
+    {
+      "name": "Film Bonding & Interface Method",
+      "weight": 0.2,
+      "reference_questions": [
+        "Is the adhesive pre-applied to the heater film (PSA liner), applied wet at assembly (LOCA), or an optical bonding gel? Describe the assembly sequence.",
+        "What is the adhesive thickness (µm), peel strength (N/25mm), and operating temperature range of the bonding layer?",
+        "What surface preparation is required on the LCD side before bonding — cleaning, plasma treatment, primer?",
+        "Does the bonding layer introduce optical distortion? Provide haze % and refractive index of the adhesive.",
+        "How are electrical connections made to the heater film — solder tabs, conductive adhesive, flex cable connector? Provide a layout drawing."
+      ],
+      "key_terms": [
+        "adhesive",
+        "PSA",
+        "LOCA",
+        "optical bonding",
+        "bonding",
+        "peel strength",
+        "surface preparation",
+        "plasma",
+        "haze",
+        "refractive index",
+        "connector",
+        "solder"
+      ],
+      "depth_markers": [
+        "µm",
+        "N/25mm",
+        "°C",
+        "haze %",
+        "refractive index",
+        "peel strength",
+        "PSA",
+        "LOCA"
+      ]
+    },
+    {
+      "name": "Thermal Activation & Operating Range",
+      "weight": 0.15,
+      "reference_questions": [
+        "At what ambient or surface temperature (°C) does the heater activate? Is this a fixed threshold or dew-point controlled?",
+        "What is the maximum continuous operating surface temperature (°C) the heater maintains?",
+        "What is the thermal response time — seconds from activation to reaching the target surface temperature at worst-case ambient?",
+        "Is heater control proportional (PID), bang-bang (on/off), or open-loop? Provide the control algorithm.",
+        "What sensor type (NTC thermistor, PT100, dew-point sensor) triggers activation and where is it located?"
+      ],
+      "key_terms": [
+        "activation temperature",
+        "operating temperature",
+        "response time",
+        "PID",
+        "control",
+        "sensor",
+        "NTC",
+        "thermistor",
+        "dew point",
+        "threshold",
+        "surface temperature"
+      ],
+      "depth_markers": [
+        "°C",
+        "seconds",
+        "PID",
+        "NTC",
+        "PT100",
+        "activation temperature",
+        "response time"
+      ]
+    },
+    {
+      "name": "Environmental Qualification & Operating Range",
+      "weight": 0.1,
+      "reference_questions": [
+        "What environmental qualification standards must the heater film meet — MIL-STD-810, DO-160, IEC 60068, EN 50155?",
+        "What is the operating temperature range (min to max °C) and storage temperature range for each deployment environment?",
+        "What humidity, condensation, and frost test conditions must the heater survive? Provide the required clearance time (seconds).",
+        "What vibration and shock profile must the bonded assembly withstand without delamination?",
+        "What dielectric strength (V/mm) and insulation resistance (MΩ) are required between the heater element and the LCD surface?"
+      ],
+      "key_terms": [
+        "MIL-STD-810",
+        "DO-160",
+        "IEC 60068",
+        "EN 50155",
+        "operating temperature",
+        "humidity",
+        "condensation",
+        "frost",
+        "vibration",
+        "shock",
+        "dielectric strength",
+        "insulation resistance"
+      ],
+      "depth_markers": [
+        "°C",
+        "MIL-STD",
+        "DO-160",
+        "IEC 60068",
+        "V/mm",
+        "MΩ",
+        "clearance time",
+        "g",
+        "Hz"
+      ]
+    }
+  ]
+}

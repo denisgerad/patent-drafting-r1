@@ -6,7 +6,6 @@ No UI imports – pure service layer.
 from __future__ import annotations
 
 import logging
-import platform
 import subprocess
 import time
 from typing import Optional, Tuple
@@ -72,12 +71,10 @@ class OllamaService:
     def stop(self) -> None:
         """Stop Ollama to free RAM between heavy phases."""
         logger.info("Stopping Ollama to reclaim RAM…")
-        
-        # Use platform-appropriate command to kill Ollama
+        import platform
         if platform.system() == "Windows":
             subprocess.run(["taskkill", "/F", "/IM", "ollama.exe"], capture_output=True, check=False)
         else:
-            # Linux, WSL, macOS
             subprocess.run(["pkill", "-f", "ollama"], capture_output=True, check=False)
 
         if self._process:
@@ -124,18 +121,29 @@ class OllamaService:
 
     # ── Health probe ─────────────────────────────────────────────────────────
 
+    def diagnose_llm_stack(self) -> Tuple[bool, str]:
+        """
+        Check that Ollama is running and the configured model can generate text.
+        Returns (ok, message). Used as a pre-flight check before running crews.
+        """
+        if not self.is_running():
+            return False, "Ollama is not running. Start it with: ollama serve"
+        try:
+            model = self.resolve_model()
+        except Exception as exc:
+            return False, str(exc)
+        ok, msg = self.test_generation(model)
+        if not ok:
+            return False, f"Model '{model}' failed generation test: {msg}"
+        return True, f"LLM stack OK: {model}"
+
     def test_generation(self, model_name: str) -> Tuple[bool, str]:
         """Send a minimal generation request to verify the model can respond."""
         api_model = model_name.replace("ollama/", "")
         try:
             r = requests.post(
                 f"{cfg.OLLAMA_BASE_URL}/api/generate",
-                json={
-                    "model": api_model,
-                    "prompt": "Reply with YES only.",
-                    "stream": False,
-                    "options": {"num_predict": 1},  # 1 token — fast even on cold start
-                },
+                json={"model": api_model, "prompt": "Reply with YES only.", "stream": False},
                 timeout=cfg.OLLAMA_GEN_TIMEOUT,
             )
             if r.status_code == 200:
@@ -143,43 +151,3 @@ class OllamaService:
             return False, f"HTTP {r.status_code}"
         except Exception as exc:
             return False, str(exc)
-
-    def diagnose_llm_stack(self) -> Tuple[bool, str]:
-        """
-        Pre-flight check for the LLM stack before building agents.
-        Returns (ok: bool, message: str).
-
-        Catches the most common failure: litellm not installed for crewai >= 0.80.
-        """
-        try:
-            import litellm  # noqa: F401
-        except ImportError:
-            return False, (
-                "litellm is not installed – required by crewai >= 0.80.\n"
-                "Fix: pip install litellm"
-            )
-
-        try:
-            from crewai import LLM
-            model = self.resolve_model()
-            LLM(model=model, base_url=cfg.OLLAMA_BASE_URL)
-        except ImportError:
-            pass  # crewai < 0.80, plain-string LLM is fine
-        except Exception as exc:
-            return False, f"crewai.LLM construction failed: {exc}"
-
-        return True, "LLM stack OK"
-
-
-# ── Provider-agnostic model resolver ─────────────────────────────────────────
-
-def get_model_string() -> str:
-    """
-    Return the CrewAI/litellm-compatible model string for the configured provider.
-
-    - Mistral API mode  →  ``mistral/mistral-large-latest``  (litellm prefix)
-    - Ollama mode       →  ``ollama/<model>``                (existing resolver)
-    """
-    if cfg.LLM_PROVIDER == "mistral_api":
-        return f"mistral/{cfg.MISTRAL_ORCHESTRATOR_MODEL}"
-    return OllamaService().resolve_model()

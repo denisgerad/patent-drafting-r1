@@ -39,10 +39,6 @@ def _match_product_checklist(field_of_invention: str) -> list[dict]:
     Match the field_of_invention string against product-type trigger patterns.
     Returns list of matched expert_categories (each is {name, questions}).
 
-    Supports two matching modes per checklist entry:
-    - require_all_triggers: true  → ALL triggers must match (AND logic)
-    - require_all_triggers: false → ANY trigger matches (OR logic, default)
-
     This is the KEY mechanism that restores expert-depth questions:
     - field_of_invention provides SCOPE (right topic)
     - product_type_checklists provide DEPTH (right questions for that product type)
@@ -55,50 +51,15 @@ def _match_product_checklist(field_of_invention: str) -> list[dict]:
     for key, entry in checklists.items():
         if key.startswith("_"):
             continue
-        triggers = entry.get("triggers", [])
-        require_all = entry.get("require_all_triggers", False)
-
-        if require_all:
-            matched = bool(triggers) and all(
-                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
-            )
-        else:
-            matched = any(
-                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
-            )
-
-        if matched:
-            logger.info("[CHECKLIST] Matched '%s' for field: %s", key, field_of_invention[:120])
-            for cat in entry.get("expert_categories", []):
-                if cat["name"] not in seen_names:
-                    matched_categories.append(cat)
-                    seen_names.add(cat["name"])
-
-    if not matched_categories:
-        logger.info("[CHECKLIST] No match — using fallback gap checklist for field: %s", field_of_invention[:120])
+        for trigger in entry.get("triggers", []):
+            if re.search(trigger, field_of_invention, re.IGNORECASE):
+                for cat in entry.get("expert_categories", []):
+                    if cat["name"] not in seen_names:
+                        matched_categories.append(cat)
+                        seen_names.add(cat["name"])
+                break  # one trigger match per product type is enough
 
     return matched_categories
-
-
-def _get_fixed_theme_names(field_of_invention: str) -> list[str] | None:
-    """Return the fixed_theme_names list for the first matched checklist entry that has one, or None."""
-    checklists = _load_product_checklists()
-    for key, entry in checklists.items():
-        if key.startswith("_"):
-            continue
-        triggers = entry.get("triggers", [])
-        require_all = entry.get("require_all_triggers", False)
-        if require_all:
-            matched = bool(triggers) and all(
-                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
-            )
-        else:
-            matched = any(
-                re.search(t, field_of_invention, re.IGNORECASE) for t in triggers
-            )
-        if matched and entry.get("fixed_theme_names"):
-            return entry["fixed_theme_names"]
-    return None
 
 
 def _rag_query_for_type(patent_type: str) -> str:
@@ -179,8 +140,7 @@ def build_scrutiny_task(
     context: str,
     patent_type: str,
     field_of_invention: str = "",
-    novelty: str = "NOT STATED",
-    document_gaps: str = "",
+    mechanism: str = "",
 ) -> Task:
     """
     Build a scrutiny task firmly anchored to the document's stated field of invention.
@@ -211,21 +171,8 @@ def build_scrutiny_task(
     focus_hint = ""
     if focus_areas:
         bullets = "\n".join(f"    * {a}" for a in focus_areas)
-        if novelty and novelty != "NOT STATED":
-            focus_hint = f"""
-⚠ NOVELTY ANCHOR — READ BEFORE GENERATING QUESTIONS:
-The extracted novelty of THIS invention is:
-  "{novelty}"
-Every theme and every question MUST be traceable to this specific novelty.
-Do NOT generate questions about components or behaviours outside this scope.
-If the checklist above contains questions irrelevant to this novelty, skip them.
-DOMAIN LENS ({patent_type}) — apply only where this novelty explicitly touches these:
-{bullets}
-"""
-        else:
-            focus_hint = f"""
-⚠ NOVELTY ANCHOR — No formal novelty statement was found. Infer the likely novel aspects from the field description and claim structure, and apply these focus areas to those inferred aspects. Do NOT treat absent novelty as permission to ask generic questions — anchor every question to a specific technical gap in THIS document:
-DOMAIN LENS ({patent_type}):
+        focus_hint = f"""
+DOMAIN LENS ({patent_type}) — apply only where the invention's novelty explicitly touches these:
 {bullets}
 """
 
@@ -251,34 +198,37 @@ DOMAIN-SPECIFIC PROHIBITIONS:
 
     checklist_block = ""
     if matched_categories:
+        # Build the section names list for the hard constraint instruction
+        section_names = [f'[{cat["name"]}]' for cat in matched_categories]
+        sections_list = "\n  ".join(section_names)
+
         lines = [
-            "PRODUCT-TYPE EXPERT CHECKLIST",
-            "The following categories and example questions represent what a domain expert",
-            "ALWAYS asks about this type of invention, regardless of what the document says.",
-            "Use these as MANDATORY theme templates. Add them to your output even if the",
-            "document does not address them — they represent the GAPS the inventor must fill.",
+            "MANDATORY OUTPUT STRUCTURE — LOCKED SECTION HEADINGS",
+            "═" * 55,
+            "Your output MUST contain EXACTLY these section headings,",
+            "in this order. This is a hard constraint, not a suggestion:",
+            f"  {sections_list}",
+            "",
+            "RULES:",
+            "  - Do NOT add sections not in this list.",
+            "  - Do NOT drop any section from this list.",
+            "  - Do NOT rename any section.",
+            "  - Do NOT merge two sections into one.",
+            "  - Each section MUST appear even if the document says nothing",
+            "    about it — the absence of information IS the gap to fill.",
+            "",
+            "FOR EACH SECTION, the following are REQUIRED QUESTION FORMATS.",
+            "Your questions must match or exceed this level of specificity.",
+            "Do not produce a vaguer version of these questions:",
             "",
         ]
         for cat in matched_categories:
-            mandatory_prefix = ""
-            if cat.get("mandatory"):
-                mandatory_prefix = "\n⚠ MANDATORY — you MUST generate at least one question from this category:\n"
-            lines.append(f"{mandatory_prefix}[{cat['name']}]")
+            lines.append(f"[{cat['name']}]")
             for q in cat["questions"]:
-                lines.append(f"  EXAMPLE: {q}")
+                lines.append(f"  REQUIRED FORMAT: {q}")
             lines.append("")
+        lines.append("═" * 55)
         checklist_block = "\n".join(lines)
-    else:
-        checklist_block = """
-MANDATORY DOCUMENT GAP CHECKLIST (no product-type checklist matched):
-For each of the following, ask a question ONLY IF the document does not provide a specific answer:
-- Exact numeric performance targets (latency, throughput, accuracy %)
-- Specific third-party components, APIs, or protocols named
-- Data flow between the primary components described
-- Error handling and fallback behaviour
-- Hardware or OS platform constraints
-Every question must quote or reference a specific passage from the document that reveals the gap.
-"""
 
     # ── Parse field_of_invention into invention core + application context ──────
     # The field statement often has two parts:
@@ -306,6 +256,19 @@ Every question must quote or reference a specific passage from the document that
             # Keep full field for the anchor, extract application sub-text
             field_application = _re.sub(r"\s+", " ", field_application)
 
+    # Supplement mechanism from parameter if workflow extracted one
+    # This provides the pre-computed mechanism to the prompt directly,
+    # so STEP 0 has a starting point rather than extracting from scratch.
+    mechanism_hint = ""
+    if mechanism.strip():
+        mechanism_hint = f"""
+PRE-EXTRACTED MECHANISM (the enabling technical feature):
+  "{mechanism.strip()}"
+This was identified from the document before the LLM call.
+Use this as your MECHANISM line in STEP 0 output — verify it against
+the document and refine if you find a more specific description.
+"""
+
     field_anchor_block = ""
     if field_core:
         app_block = ""
@@ -319,150 +282,182 @@ Every question must quote or reference a specific passage from the document that
         field_anchor_block = f"""
 PRE-EXTRACTED FIELD OF INVENTION:
   "{field_core}"
-{app_block}
-MANDATORY: Every theme and every question must be traceable to THIS field statement.
-Discard any question that cannot be traced to the invention or its stated applications.
+{app_block}{mechanism_hint}
+MANDATORY: Every theme and every question must be traceable to the FIELD
+and MECHANISM above. Discard any question that cannot be traced to these.
 """
 
-    # Pre-fill FIELD verbatim from Python-extracted value to prevent LLM hallucination.
-    # The LLM must NOT re-extract or invent these lines — they are already known.
-    prefilled_field_line = (
-        f'FIELD (verbatim): "{field_core}"'
-        if field_core
-        else 'FIELD (verbatim): "NOT FOUND IN DOCUMENT"'
-    )
-    if novelty and novelty != "NOT STATED":
-        prefilled_novelty_line = f'NOVELTY (extracted): "{novelty}"'
-    else:
-        prefilled_novelty_line = 'NOVELTY (verbatim): "NOT STATED — no formal novelty statement in document"'
+    description = f"""
+You are a senior patent expert conducting a 35 U.S.C. Section 112 enablement review.
+Patent Domain: {patent_type}
 
-    if document_gaps:
-        document_gaps_block = f"""
-=== DOCUMENT GAP LIST (pre-analysed — mandatory question targets) ===
-The following gaps were identified in this specific document.
-You MUST generate at least one question per GAP item below.
-{document_gaps}
-=== END GAP LIST ===
-"""
-    else:
-        document_gaps_block = ""
-
-    # Extract document title from first non-blank line of context
-    doc_title = ""
-    for line in context.strip().splitlines():
-        line = line.strip()
-        if line and len(line) > 10:
-            doc_title = line
-            break
-
-    # Build Step 1 instruction — use fixed theme names if the matched checklist defines them
-    _fixed_themes = _get_fixed_theme_names(field_of_invention) if field_of_invention else None
-    if _fixed_themes:
-        _theme_list = "\n".join(f"  Theme {i + 1}: {name}" for i, name in enumerate(_fixed_themes))
-        step1_block = (
-            f"Step 1: Generate EXACTLY {len(_fixed_themes)} themes using THESE EXACT NAMES — no substitutions:\n"
-            f"{_theme_list}\n"
-            f"Do NOT replace any of these with Privacy, Security, Error Handling,\n"
-            f"Scalability, or any other topic not in this list.\n"
-            f"If the document does not describe a theme's sub-system in detail, still\n"
-            f"include the theme and ask what is missing — that absence IS the gap."
-        )
-    else:
-        step1_block = (
-            "Step 1: Identify EXACTLY 5 technical themes — one per major sub-system described in the\n"
-            "  Field above. Count the distinct sub-systems named in the Field and Novelty lines;\n"
-            "  assign one theme to each. If the document does not describe a sub-system in detail,\n"
-            "  still create the theme and ask what is missing — that absence IS the gap.\n"
-            "  Use concrete sub-system names drawn verbatim or near-verbatim from the Field text."
-        )
-
-    description = f""" conducting a technical enablement review under 35 U.S.C. § 112.
-
-╔══════════════════════════════════════════════════════════════════╗
-  PATENT UNDER REVIEW : {doc_title}
-  FIELD OF INVENTION  : {field_core if field_core else "(see document)"}
-  PATENT DOMAIN       : {patent_type}
-╚══════════════════════════════════════════════════════════════════╝
-
-DOCUMENT (read every word before generating output):
-=== BEGIN DOCUMENT ===
+=== DOCUMENT TO ANALYSE ===
 {context}
-=== END DOCUMENT ===
+===========================
+{field_anchor_block}
+{checklist_block}
+MANDATORY STEP 0 — Verbatim Field Extraction
+Before writing anything else, extract THREE things from the document:
 
-⚠ CRITICAL DOMAIN LOCK:
-This patent is EXCLUSIVELY about: "{field_core[:180] if field_core else doc_title}"
-The word "television" means TV screens and broadcast content — NOT telephone calls.
-The word "channels" means communication platforms (WhatsApp, web, voice) — NOT phone lines.
-If any theme or question references telephone calls, call duration, or IVR systems,
-it is WRONG and must not be generated.
-Every theme and every question MUST be about THIS invention and no other.
-{prohibition_block}{checklist_block}{document_gaps_block}{focus_hint}
-🚫 PROHIBITED QUESTIONS — do not generate any question that:
-  • Asks how many epochs, layers, or parameters the model has
-  • Asks what training data was used (unless document claims custom training)
-  • Asks how often the system is tested, audited, or reviewed
-  • Asks what the evaluation metric or benchmark score is
-  • Can be answered with only "yes" or "no"
-  • Is about general technology category behaviour, not THIS document's gaps
-  • Names a specific ML technique (reinforcement learning, active learning,
-    transfer learning) unless that exact term appears in the document —
-    ask WHAT technique is used instead of naming one
-🚫 TECHNOLOGY ASSUMPTION PROHIBITION:
-  Never name a specific technology, protocol, provider, or architecture
-  in a question unless that exact term appears in the document.
-  WRONG: "Does the system use OAuth or OpenID Connect?"
-  RIGHT: "Which identity provider or protocol does the system use?"
-  WRONG: "Is it an encoder-decoder or transformer architecture?"
-  RIGHT: "What is the architecture of the LLM used?"
-  WRONG: "Are social media accounts used for authentication?"
-  RIGHT: "What identity sources does the system accept?"
-🚫 PROHIBITED THEMES — do not generate a theme named or focused on:
-  • Security, Privacy, or Data Protection (unless explicitly claimed)
-  • Error Handling or Fault Tolerance (unless explicitly claimed)
-  • Compliance, Regulation, or Audit
-Each question must be answerable only by the inventor — not by a textbook.
+  (a) FIELD — Copy verbatim the FIELD OF INVENTION sentence.
+      If not found: FIELD (verbatim): "NOT FOUND IN DOCUMENT"
 
-RE-READ BEFORE GENERATING:
-Field: {field_core[:300] if field_core else doc_title}
-Novelty: {novelty[:200] if novelty and novelty != "NOT STATED" else "not stated — infer from field"}
+  (b) NOVELTY — Copy verbatim the PRIMARY NOVEL CONTRIBUTION sentence IF
+      it exists in the document. If absent, write exactly:
+      NOVELTY (verbatim): "NOT STATED — invention is [device/method from field]"
+      DO NOT invent or infer novelty from your training data.
 
-TERM DEFINITIONS FOR THIS DOCUMENT ONLY:
-- "multimodal" = text + image + audio processed simultaneously by an LLM
-                  NOT "multiphone", NOT voice-only, NOT telephone commands
-- "communication channels" = platforms (WhatsApp, web app, REST API)
-                              NOT phone lines, NOT voice channels
-- "LLM" = large language model for content understanding
-           NOT a speech recognition engine
+  (c) MECHANISM — Identify the specific technical feature or component that
+      ENABLES the novelty. This is the HOW, not the WHAT.
+      Ask yourself: "What physical structure, algorithm step, or technical
+      mechanism makes this invention work?"
+      Examples of correct mechanism extraction:
+        Field: "single universal LGP for dual-edge backlight operation"
+          → MECHANISM: "dot pattern / light extraction structure on the LGP surface"
+        Field: "flexible polymer heater film bonded to an LCD"
+          → MECHANISM: "resistive heating element embedded in the polymer film"
+        Field: "time-limited verification codes mapped to identity representation"
+          → MECHANISM: "code generation algorithm and identity mapping method"
+      If the mechanism is not explicitly stated, write the most specific
+      technical noun phrase you can identify from the document.
+      DO NOT write the system name or the application — write the component
+      or method that does the work.
 
-THEME NAMING RULE — MANDATORY:
-Each theme name MUST be taken from a component, sub-system, or process
-named in the Field or Novelty above.
-BANNED theme names: "Theme 1", "Theme Name 1", "Technical Theme",
-                    "System Architecture", "Overview"
-Use terms drawn verbatim or near-verbatim from: "{field_core[:120] if field_core else doc_title}"
-Every theme name must use a term from the Field or Novelty lines above.
+Label exactly:
+  FIELD (verbatim): "..."
+  NOVELTY (verbatim): "..."
+  MECHANISM: "..."
 
-TASK — Generate a technical enablement gap analysis for the patent above.
+IMPORTANT: ALL questions about depth and technical detail in STEP 3
+must be traceable to the MECHANISM line, not the NOVELTY line.
+The MECHANISM is the source of the deep enablement questions.
 
-{step1_block}
+CRITICAL HALLUCINATION GUARD — READ BEFORE WRITING THE NOVELTY LINE:
+The document above is the ONLY permitted source for the NOVELTY line.
+Apply this self-check before writing it:
 
-Step 2: For each theme write EXACTLY 3 to 5 questions (no more, no fewer) that:
-  • Reference a specific gap or missing detail in the document above
-  • Ask for numeric values, governing equations, test procedures, or drawings
-  • Are traceable to a phrase actually present in the document
-  • Do NOT ask about surrounding products or platforms unless explicitly claimed
+  SELF-CHECK: For every distinct phrase in your proposed NOVELTY sentence,
+  ask: "Can I find this phrase, or a close paraphrase, in the document text
+  shown above?" If the answer is NO for the majority of phrases, the sentence
+  is hallucinated from your training data. Write "NOT STATED" instead.
+
+  KNOWN HALLUCINATION TRIGGERS to watch for — these are topics that an LLM
+  commonly invents when it cannot find a novelty statement:
+    * Any authentication method NOT mentioned in the document
+      (biometrics, fingerprint, facial recognition, voice recognition)
+    * Any optical metric NOT in the document
+      (luminance uniformity %, optical extraction efficiency, LGP dot pattern)
+    * Any performance improvement percentage NOT quoted from the document
+    * Any material, component, or standard NOT named in the document
+
+  RULE: If in doubt, write "NOT STATED". A wrong NOVELTY line causes every
+  downstream question to be about the wrong invention. "NOT STATED" is safe.
+
+STEP 1 — Identify Gaps in the Stated Invention
+
+PART A — The Invention Itself:
+  Ask ONLY about the MECHANISM identified in STEP 0.
+  What technical details about that mechanism are missing that a skilled
+  person needs to build or replicate it?
+
+  SCOPE RULE — TWO LEVELS:
+
+  Level 1 (Field scope): Do NOT ask about anything not named in the FIELD line.
+    If field says "verification codes mapped to identity representation"
+      → do NOT ask about biometrics or facial recognition
+    If field says "heater film bonded to LCD"
+      → do NOT ask about LCD resolution or panel brightness
+
+  Level 2 (Mechanism scope): Do NOT ask about the system AROUND the mechanism.
+    The mechanism is the novel part. Everything else is context.
+    Ask about the mechanism's own properties — not the things it connects to.
+    Examples:
+      MECHANISM: "dot pattern on LGP surface"
+        CORRECT: dot geometry, spacing, depth, density gradient, governing formula
+        WRONG:   backlight source power, LCD panel size, thermal management,
+                 mode switching timing — these surround the LGP, they are not it
+      MECHANISM: "resistive heating element in polymer film"
+        CORRECT: element geometry, sheet resistance, activation temperature
+        WRONG:   LCD resolution, LCD backlight voltage, display connectors
+      MECHANISM: "TOTP code generation algorithm"
+        CORRECT: algorithm inputs, time window, key derivation, code length
+        WRONG:   UI design, server hardware, network topology
+
+PART B — Application Context (ONLY include if the field statement explicitly
+  names deployment environments or use conditions):
+  If the field statement says where or when the invention is used, generate
+  one dedicated theme covering:
+    - Operational conditions imposed by those specific environments
+      (use the exact environment names from the field statement)
+    - Qualification standards relevant to those environments
+    - Performance requirements driven by those use conditions
+  Do NOT invent deployment environments not stated in the field.
+{focus_hint}{prohibition_block}
+STEP 2 — Derive 3 to 5 Theme Names
+Name themes after the invention's own sub-systems — derived from the FIELD line.
+  Good theme naming rule: take the key nouns from the field statement and make
+  them into theme names. For example:
+    Field: "time-limited verification codes mapped to an identity representation"
+      → "Verification Code Generation & Lifecycle"
+      → "Identity Representation & Mapping"
+      → "Security Model & Threat Analysis"
+      → "Integration & Deployment Requirements"
+    Field: "flexible polymer heater film bonded to an LCD"
+      → "Polymer Film Composition & Form Factor"
+      → "Heating Element Geometry & Power"
+      → "Film Bonding & Interface Method"
+      → "Environmental Qualification & Operating Range"
+  Bad theme names (too generic for any invention):
+    "Specifications", "Components", "System Design", "Technical Details"
+  If the field statement explicitly names deployment environments, include
+  one theme covering operational requirements for those environments.
+
+STEP 3 — Write 3 to 5 Questions per Theme
+Each question MUST:
+  - Be traceable to a specific property or gap of the MECHANISM (from STEP 0)
+  - Request ONE of: drawings/diagrams, governing equations, numeric values
+    with units, fabrication procedures, or measured performance comparisons
+  - Name the specific parameter, component, or condition being asked about
+    (never use open-ended phrasing like "describe the design" or "explain how")
+  - Match or exceed the specificity level of the REQUIRED FORMAT questions above
+
+DEPTH TEST — before writing each question, ask:
+  "Could an inventor answer this with a single number, formula, drawing,
+   or yes/no + specification?" If yes, the question has the right depth.
+  "Would any inventor of any product be able to answer this?" If yes,
+   the question is too generic — name the specific element.
+
+EXAMPLES of wrong vs right depth:
+  WRONG: "What material is the light guide made of?"
+  RIGHT: "What is the polymer substrate, refractive index (at 550nm),
+          and thickness (mm) of the light guide plate?"
+
+  WRONG: "How does the pattern ensure uniform illumination?"
+  RIGHT: "Provide the dot size variation (µm) from edge to centre and
+          the mathematical relationship between dot density and extraction
+          efficiency — is there a governing formula or lookup table?"
+
+  WRONG: "How is the backlight source connected?"
+  RIGHT: [DO NOT ASK — backlight source is not the MECHANISM]
 {units_note}
-Start your response with EXACTLY these two lines — do not alter them:
-{prefilled_field_line}
-{prefilled_novelty_line}
 
-Then grouped questions:
+OUTPUT FORMAT (strict):
+First three lines:
+  FIELD (verbatim): "..."
+  NOVELTY (verbatim): "..."
+  MECHANISM: "..."
+
+Then blank line, then grouped questions using ONLY the locked section
+headings from the MANDATORY OUTPUT STRUCTURE above (if checklist exists),
+or theme names derived from the MECHANISM (if no checklist):
+
 [Theme Name 1]
-1. ...
-2. ...
+1. [Specific question]
+2. [Specific question]
+3. [Specific question]
 
 [Theme Name 2]
-1. ...
+1. [Specific question]
 ...
 """
 
@@ -470,9 +465,11 @@ Then grouped questions:
         description=description,
         agent=scrutinizer,
         expected_output=(
-            f"Two verbatim header lines (FIELD and NOVELTY as provided), "
-            f"then 3-5 named theme sections with 3-5 enablement questions each, "
-            f"all grounded in the {patent_type} document content."
+            "Verbatim FIELD and NOVELTY lines (NOVELTY written as 'NOT STATED' if absent). "
+            f"Then 3-5 named technical theme sections, including one mandatory "
+            f"'Environmental Qualification and Operational Requirements' theme when "
+            f"the field names deployment environments. Each theme has 3-5 "
+            f"enablement questions grounded in the {patent_type} document."
         ),
     )
 

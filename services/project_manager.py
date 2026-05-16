@@ -69,6 +69,7 @@ def create_project(
     user_id: str = "default_user",
 ) -> tuple[Path, Dict[str, Any]]:
     """Create folder structure + initial metadata. Returns (path, metadata)."""
+    import config.settings as cfg
     project_path = _user_dir(user_id) / project_name
     project_path.mkdir(parents=True, exist_ok=True)
 
@@ -81,9 +82,14 @@ def create_project(
         "questions_generated": False,
         "qa_uploaded": False,
         "draft2_generated": False,
+        # Record which LLM provider was active when the project was created.
+        # Used to warn the user if they later switch to a cloud provider for
+        # a project that was started with local (Ollama) processing.
+        "llm_provider_created": cfg.LLM_PROVIDER,
     }
     _write_metadata(project_path, metadata)
-    logger.info("Created project '%s' at '%s'", project_name, project_path)
+    logger.info("Created project '%s' at '%s' with provider=%s",
+                project_name, project_path, cfg.LLM_PROVIDER)
     return project_path, metadata
 
 

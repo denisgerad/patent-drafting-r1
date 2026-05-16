@@ -1,0 +1,167 @@
+{
+  "product_type": "power_electronics",
+  "domain": "Electronics — Power Electronics",
+  "readiness_threshold": 0.65,
+  "category_threshold": 0.5,
+  "categories": [
+    {
+      "name": "Switching Topology & Operating Point",
+      "weight": 0.3,
+      "reference_questions": [
+        "What is the switching topology? Provide a schematic of the power stage.",
+        "What is the switching frequency, input voltage range, output voltage, and maximum current?",
+        "What is the duty cycle range at voltage and load extremes? Provide volt-second balance equation.",
+        "What is the measured efficiency vs load curve from 10% to 100% load?",
+        "What is the output voltage ripple and load regulation at full load?"
+      ],
+      "key_terms": [
+        "switching topology",
+        "buck",
+        "boost",
+        "flyback",
+        "LLC",
+        "switching frequency",
+        "duty cycle",
+        "volt-second",
+        "efficiency",
+        "ripple",
+        "load regulation",
+        "schematic"
+      ],
+      "depth_markers": [
+        "kHz",
+        "MHz",
+        "V",
+        "A",
+        "%",
+        "mV",
+        "schematic",
+        "efficiency curve",
+        "volt-second balance"
+      ]
+    },
+    {
+      "name": "Magnetic Design",
+      "weight": 0.25,
+      "reference_questions": [
+        "What core material, shape, and size are used? Provide manufacturer part number.",
+        "What is Bpeak, Bsat, and core loss at operating frequency?",
+        "What is inductance value, AL value, and number of turns for each winding?",
+        "How is air gap length determined? Provide inductance vs DC bias curve.",
+        "What is the winding arrangement and measured leakage inductance?"
+      ],
+      "key_terms": [
+        "core material",
+        "ferrite",
+        "Bsat",
+        "Bpeak",
+        "flux density",
+        "inductance",
+        "AL value",
+        "turns",
+        "air gap",
+        "leakage inductance",
+        "winding"
+      ],
+      "depth_markers": [
+        "mT",
+        "µH",
+        "mH",
+        "nH/turn²",
+        "mm",
+        "mW/cm³",
+        "AL value",
+        "DC bias"
+      ]
+    },
+    {
+      "name": "Gate Drive & Switch Selection",
+      "weight": 0.25,
+      "reference_questions": [
+        "What switching devices are used? Provide part number, Vds, Id, and Rds(on).",
+        "What is gate drive voltage, peak gate current, and gate resistor value?",
+        "What is measured switching loss per transition?",
+        "How is dead-time set and what is its value?",
+        "What protection circuits are implemented with trip levels?"
+      ],
+      "key_terms": [
+        "MOSFET",
+        "GaN",
+        "SiC",
+        "IGBT",
+        "Rds(on)",
+        "gate drive",
+        "gate resistor",
+        "switching loss",
+        "dead-time",
+        "OVP",
+        "OCP",
+        "OTP"
+      ],
+      "depth_markers": [
+        "V",
+        "A",
+        "mΩ",
+        "Ω",
+        "ns",
+        "µJ",
+        "mV/ns"
+      ]
+    },
+    {
+      "name": "Thermal Management",
+      "weight": 0.1,
+      "reference_questions": [
+        "What is junction-to-ambient thermal resistance including heatsink and TIM?",
+        "What is maximum junction temperature at full load and max ambient?",
+        "What TIM is used? State thermal conductivity and bond-line thickness.",
+        "How is airflow provided? State flow rate and inlet temperature."
+      ],
+      "key_terms": [
+        "thermal resistance",
+        "junction temperature",
+        "TIM",
+        "thermal interface",
+        "heatsink",
+        "airflow",
+        "convection"
+      ],
+      "depth_markers": [
+        "°C/W",
+        "°C",
+        "W/mK",
+        "mm",
+        "CFM",
+        "L/min"
+      ]
+    },
+    {
+      "name": "EMI Filter & Compliance",
+      "weight": 0.1,
+      "reference_questions": [
+        "What is the EMI filter topology? Provide schematic with component values.",
+        "What regulatory standards must be met? Provide measured emission margin.",
+        "What is common-mode choke inductance and current rating?",
+        "What creepage and clearance distances are required?"
+      ],
+      "key_terms": [
+        "EMI filter",
+        "common-mode",
+        "differential-mode",
+        "CISPR",
+        "FCC",
+        "emission margin",
+        "creepage",
+        "clearance"
+      ],
+      "depth_markers": [
+        "µH",
+        "A",
+        "dBµV",
+        "mm",
+        "CISPR 32",
+        "FCC Part 15"
+      ]
+    }
+  ]
+}

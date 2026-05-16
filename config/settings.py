@@ -1,6 +1,13 @@
 """
 config/settings.py  –  Single source of truth for all runtime configuration.
-Import the module-level names directly:  from config.settings import OLLAMA_BASE_URL
+
+LLM_PROVIDER controls which backend is used:
+  "ollama"  — local Ollama server (default, no API key needed)
+  "azure"   — Azure OpenAI Service
+  "claude"  — Anthropic Claude API
+  "openai"  — OpenAI API direct
+
+Set only the variables for the provider you are using.
 """
 from __future__ import annotations
 import os
@@ -9,13 +16,34 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Ollama ────────────────────────────────────────────────────────────────────
+# ── Provider selection ────────────────────────────────────────────────────────
+LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "ollama").lower()
+# Valid values: "ollama", "azure", "claude", "openai"
+
+# ── Ollama (local, default) ───────────────────────────────────────────────────
 OLLAMA_BASE_URL: str       = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL: str          = os.getenv("OLLAMA_MODEL", "")
 MISTRAL_MODEL: str         = os.getenv("MISTRAL_MODEL", "")          # legacy alias
 OLLAMA_TIMEOUT: int        = int(os.getenv("OLLAMA_TIMEOUT", "5"))
 OLLAMA_STARTUP_WAIT: int   = int(os.getenv("OLLAMA_STARTUP_WAIT", "15"))
-OLLAMA_GEN_TIMEOUT: int    = int(os.getenv("OLLAMA_GEN_TIMEOUT", "120"))
+OLLAMA_GEN_TIMEOUT: int    = int(os.getenv("OLLAMA_GEN_TIMEOUT", "30"))
+
+# ── Azure OpenAI ──────────────────────────────────────────────────────────────
+AZURE_API_KEY: str          = os.getenv("AZURE_OPENAI_API_KEY", "")
+AZURE_API_BASE: str         = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+# e.g. https://YOUR-RESOURCE.openai.azure.com/
+AZURE_API_VERSION: str      = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+AZURE_DEPLOYMENT_NAME: str  = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+# The deployment name you created in Azure AI Studio (not the model name)
+
+# ── Anthropic Claude ──────────────────────────────────────────────────────────
+CLAUDE_API_KEY: str   = os.getenv("ANTHROPIC_API_KEY", "")
+CLAUDE_MODEL: str     = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
+# Other options: claude-opus-4-20250514, claude-haiku-4-5-20251001
+
+# ── OpenAI Direct ─────────────────────────────────────────────────────────────
+OPENAI_API_KEY: str  = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL: str    = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 # ── Embedding ─────────────────────────────────────────────────────────────────
 EMBEDDING_MODEL: str = os.getenv(
@@ -39,18 +67,8 @@ CLASSIFIER_RAG_RESULTS: int  = int(os.getenv("CLASSIFIER_RAG_RESULTS", "10"))
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 PATENT_TYPES_JSON: Path = Path(os.getenv("PATENT_TYPES_JSON", "patent_types.json"))
-PRODUCT_CHECKLISTS_JSON: Path = Path(os.getenv("PRODUCT_CHECKLISTS_JSON", "product_type_checklists.json"))
 PROJECTS_DIR: Path      = Path(os.getenv("PROJECTS_DIR", "./projects"))
 TEMP_DIR: Path          = Path(os.getenv("TEMP_DIR", "./temp"))
 
 # ── CrewAI ────────────────────────────────────────────────────────────────────
 CREW_TIMEOUT_SECONDS: int = int(os.getenv("CREW_TIMEOUT_SECONDS", "300"))
-
-# ── LLM Provider (Ollama local vs Mistral API) ────────────────────────────────
-# Set USE_MISTRAL_API=true in .env to route all LLM calls through the Mistral API
-# instead of the local Ollama instance. Useful for quality benchmarking.
-# ⚠ Set USE_MISTRAL_API=false before processing real patent documents.
-USE_MISTRAL_API: bool            = os.getenv("USE_MISTRAL_API", "false").lower() == "true"
-LLM_PROVIDER: str                = "mistral_api" if USE_MISTRAL_API else "ollama"
-MISTRAL_API_KEY: str             = os.getenv("MISTRAL_API_KEY", "")
-MISTRAL_ORCHESTRATOR_MODEL: str  = os.getenv("MISTRAL_ORCHESTRATOR_MODEL", "mistral-large-latest")

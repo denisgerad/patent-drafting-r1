@@ -1,0 +1,73 @@
+{
+  "product_type": "algorithm_method_patent",
+  "domain": "Software — Algorithm / Method",
+  "readiness_threshold": 0.65,
+  "category_threshold": 0.5,
+  "categories": [
+    {
+      "name": "Algorithm Specification & Completeness",
+      "weight": 0.6,
+      "reference_questions": [
+        "Provide complete pseudocode or flowchart for the claimed method including every decision branch.",
+        "What are the exact inputs and outputs with data types, value ranges, and units?",
+        "What is the worst-case time complexity O(?) and space complexity O(?) with derivation?",
+        "What alternative embodiments exist — can any step be omitted or reordered?",
+        "What are the edge cases and how does the algorithm behave in each?"
+      ],
+      "key_terms": [
+        "pseudocode",
+        "flowchart",
+        "algorithm",
+        "input",
+        "output",
+        "data type",
+        "complexity",
+        "O(",
+        "edge case",
+        "alternative embodiment",
+        "decision",
+        "loop",
+        "termination"
+      ],
+      "depth_markers": [
+        "pseudocode",
+        "flowchart",
+        "O(n",
+        "O(log",
+        "data type",
+        "edge case",
+        "worst-case"
+      ]
+    },
+    {
+      "name": "Implementation Reproducibility",
+      "weight": 0.4,
+      "reference_questions": [
+        "What programming language, compiler, and library dependencies are required?",
+        "What hardware platform and OS were used for benchmark results?",
+        "What floating-point precision and rounding mode are required?",
+        "What is the performance improvement vs prior art? Provide benchmark methodology."
+      ],
+      "key_terms": [
+        "programming language",
+        "compiler",
+        "library",
+        "hardware",
+        "benchmark",
+        "reproducible",
+        "floating-point",
+        "precision",
+        "performance improvement",
+        "prior art"
+      ],
+      "depth_markers": [
+        "ms",
+        "ops/s",
+        "%",
+        "speedup",
+        "float32",
+        "float64"
+      ]
+    }
+  ]
+}

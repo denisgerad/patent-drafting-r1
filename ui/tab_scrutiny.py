@@ -201,9 +201,36 @@ def _render_scrutiny_panel(project_path: Optional[str]) -> None:
     if st.session_state.patent_questions:
         st.success("✅ Questions already generated for this session.")
         if st.button("🔄 Re-generate Questions"):
-            st.session_state.patent_questions = None
+            st.session_state.patent_questions  = None
+            st.session_state.readiness_report  = None
+            st.session_state.field_of_invention = ""
+            st.session_state.mechanism          = ""
             st.rerun()
         return
+
+    # ── Data transmission warning for cloud providers ─────────────────────
+    import config.settings as _cfg
+    from services.cloud_llm_service import is_cloud_provider, provider_name
+    if is_cloud_provider():
+        st.warning(
+            f"⚠️ **Data Privacy Notice**\n\n"
+            f"You are using **{provider_name()}** (cloud provider). "
+            f"Clicking 'Generate Questions' will send excerpts from your uploaded "
+            f"patent document to {provider_name().split('(')[0].strip()} servers "
+            f"for processing.\n\n"
+            f"**For unpublished / pre-filing patents**, this may constitute prior "
+            f"disclosure. Use **Ollama (local)** instead by setting "
+            f"`LLM_PROVIDER=ollama` in your `.env` file.\n\n"
+            f"Proceed only if your patent is already filed, or if you have a "
+            f"Data Processing Agreement with your cloud provider."
+        )
+        confirmed = st.checkbox(
+            "I understand patent content will be sent to a cloud API and I accept this risk",
+            key="cloud_data_consent"
+        )
+        if not confirmed:
+            st.info("☝️ Tick the checkbox above to proceed with cloud analysis.")
+            return
 
     if st.button("🚀 Generate Scrutiny Questions", type="primary"):
         _run_scrutiny(project_path)
@@ -239,6 +266,10 @@ def _render_persona_tuner() -> None:
 
 
 def _run_scrutiny(project_path: Optional[str]) -> None:
+    # Clear any stale report from a previous run before starting
+    st.session_state.readiness_report   = None
+    st.session_state.field_of_invention = ""
+    st.session_state.mechanism          = ""
     collection = st.session_state.get("draft1_collection")
     if not collection:
         st.error("Draft1 collection missing. Please re-process Draft1.")
@@ -267,9 +298,11 @@ def _run_scrutiny(project_path: Optional[str]) -> None:
         """)
         return
 
-    st.session_state.patent_questions = result.questions
-    # Store the extracted field of invention so the UI can show it
-    st.session_state.field_of_invention = result.field_of_invention
+    st.session_state.patent_questions  = result.questions
+    st.session_state.field_of_invention = getattr(result, "field_of_invention", "")
+    st.session_state.mechanism          = getattr(result, "mechanism", "")
+    # Always overwrite — never keep a stale report from a previous patent
+    st.session_state.readiness_report   = getattr(result, "readiness_report", None)
 
     if project_path:
         project_manager.save_questions(project_path, result.questions)
@@ -279,28 +312,132 @@ def _run_scrutiny(project_path: Optional[str]) -> None:
 
 # ── Questions Output ──────────────────────────────────────────────────────────
 
+def _render_readiness_report(report) -> None:
+    """Render the readiness gate panel with colour-coded verdict."""
+    VERDICT_CONFIG = {
+        "READY":        ("✅", "success", "Ready for domain review"),
+        "BORDERLINE":   ("🟡", "warning", "Borderline — review weak categories before sending"),
+        "NOT_READY":    ("❌", "error",   "Not ready — address gaps before domain review"),
+        "NO_REFERENCE": ("ℹ️", "info",    "No reference file — section check only"),
+    }
+    icon, colour, label = VERDICT_CONFIG.get(
+        report.verdict, ("❓", "info", report.verdict)
+    )
+
+    with st.expander(
+        f"{icon} **Readiness Gate: {label}**  "
+        f"(overall score: {report.overall_score:.0%})",
+        expanded=(report.verdict != "READY"),
+    ):
+        st.caption(f"Reference: `{report.reference_file_used}` — {report.domain}")
+        st.caption(report.verdict_reason)
+
+        # Per-category table
+        if report.category_scores:
+            st.markdown("**Category breakdown:**")
+            for cs in report.category_scores:
+                cat_icon  = "✅" if cs.passed else "❌"
+                bar_fill  = int(cs.category_score * 10)
+                bar       = "█" * bar_fill + "░" * (10 - bar_fill)
+                st.markdown(
+                    f"{cat_icon} **{cs.name}** &nbsp; "
+                    f"`{bar}` {cs.category_score:.0%} &nbsp; "
+                    f"_(topic: {cs.topic_coverage:.0%} | "
+                    f"depth: {cs.depth_coverage:.0%} | "
+                    f"heading: {'✓' if cs.completeness == 1.0 else '✗'})_"
+                )
+                if cs.missing_key_terms:
+                    st.caption(
+                        f"   Missing topics: {', '.join(cs.missing_key_terms[:6])}"
+                    )
+                if cs.missing_depth_markers:
+                    st.caption(
+                        f"   Missing depth: {', '.join(cs.missing_depth_markers[:4])}"
+                    )
+
+        # Summary stats
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Overall Score", f"{report.overall_score:.0%}",
+                      delta=f"{report.overall_score - report.readiness_threshold:.0%} vs threshold")
+        with col2:
+            n_pass = len([c for c in report.category_scores if c.passed])
+            st.metric("Categories Passed",
+                      f"{n_pass}/{len(report.category_scores)}")
+        with col3:
+            if report.total_depth_markers_expected > 0:
+                depth_pct = (report.total_depth_markers_found /
+                             report.total_depth_markers_expected)
+                st.metric("Depth Markers",
+                          f"{report.total_depth_markers_found}/"
+                          f"{report.total_depth_markers_expected}",
+                          delta=f"{depth_pct:.0%}")
+
+        if report.verdict == "NO_REFERENCE":
+            st.info(
+                "To enable full readiness scoring for this patent type, "
+                "add a reference file: "
+                f"domain_reference_questions/{report.product_type}.json  "
+                "See domain_reference_questions/README.md for the format."
+            )
+
+
 def _render_questions_output(project_path: Optional[str]) -> None:
     st.divider()
     st.subheader("📋 Generated Scrutiny Questions")
 
-    # Show the extracted field of invention as a verification banner.
-    # If it does NOT match the actual patent subject, the user knows to
-    # override the domain or re-process with a clearer source document.
-    field = st.session_state.get("field_of_invention", "")
+    # Verification banners — show what was extracted before questions
+    field     = st.session_state.get("field_of_invention", "")
+    mechanism = st.session_state.get("mechanism", "")
+
     if field:
-        st.success(f"🔬 **Detected field of invention:** {field}")
-        st.caption(
-            "The questions below are grounded in this field. "
-            "If this does not match your invention, re-run with a clearer "
-            "abstract/field-of-invention section in your Draft1 document."
+        st.success(f"🔬 **Field of invention:** {field}")
+    else:
+        st.warning(
+            "⚠️ Field of invention could not be auto-detected. "
+            "Add a 'Field of the Invention' section to your Draft1 document."
+        )
+
+    if mechanism:
+        st.info(
+            f"⚙️ **Enabling mechanism identified:** {mechanism}\n\n"
+            f"Questions are targeted at this specific technical feature. "
+            f"If this is wrong, your Draft1 needs a clearer description "
+            f"of the novel component or method."
         )
     else:
         st.warning(
-            "⚠️ Field of invention could not be auto-detected from the document. "
-            "Questions may be less targeted — consider adding a clear "
-            "'Field of the Invention' section to your Draft1 document."
+            "⚠️ Enabling mechanism could not be identified. "
+            "Questions may be too generic — describe the specific novel "
+            "feature in your Draft1 document."
         )
 
+    # ── Readiness gate panel ─────────────────────────────────────────────
+    # report is set by the current run. None means either:
+    #   (a) No checklist matched this patent type → rater was not called
+    #   (b) A new Draft1 was just uploaded (no run yet for this document)
+    # In both cases show a clear "no reference" message — never show a
+    # stale report from a previous patent.
+    report = st.session_state.get("readiness_report")
+    if report is not None:
+        _render_readiness_report(report)
+    else:
+        field = st.session_state.get("field_of_invention", "")
+        if field:
+            # A run completed but no checklist matched this patent type
+            st.info(
+                "ℹ️ **No readiness reference for this patent type.**\n\n"
+                "The questions above were generated but cannot be automatically "
+                "scored — no reference file exists for this invention category.\n\n"
+                "To enable scoring, add domain expert questions to:\n"
+                "`domain_reference_questions/<product_type>.json`\n\n"
+                "See `domain_reference_questions/README.md` for the format. "
+                "The questions above may still be sent for domain review based "
+                "on your own judgement."
+            )
+        # If field is empty, no run has happened yet — show nothing
+
+    st.divider()
     st.markdown(st.session_state.patent_questions)
 
     from services.export_service import to_docx

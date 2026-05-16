@@ -64,45 +64,62 @@
           "What dielectric strength (V/mm) and insulation resistance (MΩ) are required between the heater element and the display surface?"
         ]
       }
+    ],
+    "anti_patterns": [
+      "Do NOT ask about LCD panel resolution, pixel density, or refresh rate",
+      "Do NOT ask about LCD backlight voltage or current — these drive the display, not the heater",
+      "Do NOT ask about display connectors or cable routing",
+      "Do NOT ask about the optical performance of the LCD — the heater film is not an optical component",
+      "DO ask about the heater film's own thermal, electrical, and mechanical properties"
     ]
   },
   "light_guide_plate": {
     "triggers": [
-      "light guide",
-      "light guide plate",
-      "LGP",
-      "light guide panel",
-      "edge-lit",
-      "edge lit",
-      "backlight",
-      "light extraction",
-      "dot pattern",
-      "extraction pattern",
-      "optical film"
+      "\\blight guide\\b",
+      "\\blight guide plate\\b",
+      "\\bLGP\\b",
+      "\\blight guide panel\\b",
+      "\\bedge.lit\\b",
+      "\\bedge lit\\b",
+      "\\bbacklight\\b",
+      "\\blight extraction\\b",
+      "\\bdot pattern\\b",
+      "\\bextraction pattern\\b",
+      "\\boptical film\\b"
+    ],
+    "anti_patterns": [
+      "Do NOT ask about backlight source type, power, or spectral distribution — the light sources are context, not the invention",
+      "Do NOT ask about LCD panel size, resolution, brightness, or connectors — the display panel is the host device",
+      "Do NOT ask about mode switching timing, user controls, or transition times — these are system-level operations",
+      "Do NOT ask about thermal management of the backlight or display — not part of the LGP invention",
+      "Do NOT ask about optical coupling between the source and LGP edge — the coupling is context unless explicitly claimed as novel",
+      "DO ask specifically about the dot pattern or extraction feature geometry — this is the novel mechanism in LGP patents"
     ],
     "expert_categories": [
       {
         "name": "Structural Design & Optical Architecture",
         "questions": [
-          "Provide top-view, cross-section, and ray-diagram drawings showing the light injection geometry and overall light guide structure.",
-          "Explain the novel extraction structure including any symmetry or complementary behaviour for dual-edge or multi-edge illumination.",
-          "Clarify whether the extraction pattern is mathematically defined and provide the governing formula, if any."
+          "Provide drawings in three views — top view showing the extraction pattern layout, cross-section showing dot depth profile, and a ray diagram showing the light path from each edge injection point through the extraction features to the display surface.",
+          "Explain the novel extraction structure: describe the dot or feature geometry (shape, cross-sectional profile, depth in µm, lateral dimensions in µm) and whether it exhibits symmetry or complementary behaviour specifically designed for dual-edge illumination.",
+          "Describe how dot size, depth, and density vary spatially across the LGP — does density increase toward the centre to compensate for attenuation of guided light? Provide the variation profile (gradient function or lookup table).",
+          "How does changing dot geometry parameters (shape, depth, lateral size, pitch) affect light extraction efficiency at that location, and what is the resulting change in luminance uniformity percentage?",
+          "Is the extraction pattern mathematically defined by a governing equation? If so, provide the formula relating dot parameters to local extraction efficiency and the boundary conditions applied."
         ]
       },
       {
-        "name": "Dot / Feature Geometry & Light Extraction",
+        "name": "Optical Optimisation & Mode Independence",
         "questions": [
-          "Describe dot or feature geometry in detail: shape, size range (µm), depth (µm), pitch variation from edge to centre.",
-          "How does dot size or density change toward the centre to compensate for attenuation of the guided light?",
-          "How does changing dot geometry (shape, size, depth, spacing) affect light extraction efficiency and luminance uniformity %?"
+          "Explain how dot density and spatial distribution are optimised specifically for dual-edge operation — what design principle ensures that light injected from each edge is extracted uniformly without interference between the two illumination fields?",
+          "Describe how luminance uniformity is maintained across three operating conditions: day source only active, NVG source only active, and both sources active simultaneously. Provide uniformity % (measured per VESA or equivalent standard) for each condition.",
+          "What simulation tools (e.g. LightTools, TracePro, Zemax, custom ray-tracing) and design methodology were used to optimise the extraction pattern? Describe the optimisation objective function and convergence criterion."
         ]
       },
       {
         "name": "Material, Fabrication & Performance",
         "questions": [
-          "Specify the material and refractive index of the light guide substrate.",
-          "Describe the fabrication method used to realise the extraction pattern (injection moulding, laser engraving, screen printing).",
-          "Provide measured performance data: uniformity %, luminous efficiency (lm/W), and thickness vs. prior-art comparison."
+          "Specify the substrate material of the LGP (e.g. PMMA, PC, glass) including refractive index at the primary operating wavelength, haze %, transmittance %, and the thickness profile across the guide.",
+          "Describe the fabrication method used to realise the extraction pattern — injection moulding with a patterned tool, laser engraving, UV embossing, screen printing, or other process. For each process step that defines the dot geometry, state the dimensional tolerance achievable.",
+          "Provide measurable performance data comparing this universal LGP design against a standard single-edge LGP: luminance uniformity % improvement, optical efficiency (lm/W) at the LGP output, total thickness reduction (mm), and any scalability benefit for larger panel sizes."
         ]
       }
     ]
@@ -551,15 +568,7 @@
       "\\bobject detection\\b",
       "\\bnatural language processing\\b",
       "\\bNLP\\b",
-      "\\bcomputer vision\\b",
-      "\\bLLM\\b",
-      "\\blarge language model\\b",
-      "\\bmultimodal\\b",
-      "\\bgenerative AI\\b",
-      "\\btransformer\\b",
-      "\\bfoundation model\\b",
-      "\\bRAG\\b",
-      "\\bretrieval.augmented\\b"
+      "\\bcomputer vision\\b"
     ],
     "expert_categories": [
       {
@@ -589,72 +598,6 @@
           "What is the inference latency (ms) and throughput (samples/s) on the target hardware? Specify the hardware and batch size used for measurement.",
           "What post-training optimisations are applied (quantisation INT8/INT4, pruning, distillation)? Quantify the accuracy-efficiency trade-off.",
           "What is the minimum hardware requirement for deployment (RAM MB, compute TFLOPS, storage MB)?"
-        ]
-      }
-    ]
-  },
-  "tv_content_discovery_llm": {
-    "require_all_triggers": false,
-    "fixed_theme_names": [
-      "Multimodal LLM Processing Pipeline",
-      "Communication Channel Integration",
-      "Distributed Identity Management",
-      "Cross-Platform Device Control",
-      "Television Content Discovery and Ranking"
-    ],
-    "triggers": [
-      "television.*content discovery|content discovery.*television|\\bTV\\b.*content",
-      "multimodal.*LLM|LLM.*multimodal|large language model.*television"
-    ],
-    "expert_categories": [
-      {
-        "name": "Multimodal Input Processing",
-        "questions": [
-          "What modalities are simultaneously supported (text, voice, image) and what is the per-modality latency budget in ms?",
-          "Is the multimodal LLM a named third-party model (e.g. GPT-4V, Gemini, LLaVA) or a custom-trained model? If custom, what training corpus, objective function, and minimum parameter count are required to reproduce the multimodal reasoning capability?",
-          "How does the system resolve conflicts when different input channels submit contradictory queries for the same session?",
-          "At what stage in the processing pipeline is user data anonymized — before the LLM call, inside the LLM context, or post-response — and what specific technique (tokenization masking, differential privacy, k-anonymity) is applied?"
-        ]
-      },
-      {
-        "name": "Communication Channels",
-        "questions": [
-          "What are the specific communication channels supported (e.g. WhatsApp, SMS, web app, voice assistant)? For each channel, what API or protocol integration is used, and is each channel independently claimed or only the combination?",
-          "What is the message size limit and rate limit enforced per channel, and how are limit violations surfaced to the user?",
-          "How does the system maintain session continuity when a user switches between communication channels mid-interaction?"
-        ]
-      },
-      {
-        "name": "Cross-Platform Identity & Verification",
-        "mandatory": true,
-        "questions": [
-          "What cryptographic algorithm generates the time-limited verification codes, and what is the expiry duration in seconds?",
-          "How is a user's TV-platform identity bound to their messaging-platform identity without storing PII — what is the specific anonymization technique?",
-          "What is the maximum number of platform identities that can be linked per user session, and is there a rate limit on linking attempts?"
-        ]
-      },
-      {
-        "name": "TV Device Control Interface",
-        "questions": [
-          "What protocol (HDMI-CEC, IP-based REST, proprietary SDK) is used to transmit control commands to the TV, and what is the maximum acceptable round-trip command latency in milliseconds?",
-          "Which TV operating systems (webOS, Tizen, Android TV, Roku OS, FireOS) are explicitly supported, and what abstraction layer handles firmware version differences between them?",
-          "How does the system confirm a control command was executed on the TV — ACK mechanism, polling interval, or event callback?"
-        ]
-      },
-      {
-        "name": "Content Discovery & Ranking",
-        "questions": [
-          "At what interval (minutes/hours) is the content metadata catalogue refreshed, and what is the source of truth for catalogue updates?",
-          "What algorithm determines content recommendation ranking — is it rule-based filtering, vector embedding similarity, or a learned reward model — and what input signals does it consume?",
-          "How does the system handle a query that matches zero content items — fallback logic and user-facing response?"
-        ]
-      },
-      {
-        "name": "Inference Compute & Deployment Scope",
-        "questions": [
-          "What is the minimum inference compute requirement for the multimodal LLM component — specifically, can it run on a standard cloud inference endpoint (e.g. 1× A10G GPU), and is on-device or edge deployment within the claimed scope of the invention?",
-          "What is the end-to-end latency budget from user query submission to TV command execution, and how is this measured and validated?",
-          "Which components of the system are stateless and which maintain persistent state — and what persistence mechanism (database, cache, session store) is used for each stateful component?"
         ]
       }
     ]
@@ -742,6 +685,142 @@
           "What transaction isolation level is provided (READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALISABLE)? How are conflicts detected and resolved?",
           "What is the measured query latency (ms) at p50, p95, p99 for the primary claimed operation at the stated dataset size? Provide the benchmark methodology.",
           "What sharding or partitioning strategy is used? How are data rebalanced when nodes are added or removed?"
+        ]
+      }
+    ]
+  },
+  "identity_verification_system": {
+    "triggers": [
+      "\\bverification code\\b",
+      "\\bOTP\\b",
+      "\\bTOTP\\b",
+      "\\bHOTP\\b",
+      "\\bone.time password\\b",
+      "\\btime.limited\\b",
+      "\\btime.based code\\b",
+      "\\baccess token\\b",
+      "\\bidentity token\\b",
+      "\\bauth token\\b",
+      "\\bidentity representation\\b",
+      "\\bidentity mapping\\b",
+      "\\bcredential\\b",
+      "\\bauthentication code\\b",
+      "\\bverification token\\b",
+      "\\bsession token\\b",
+      "\\btemporary code\\b",
+      "\\bsingle.use code\\b"
+    ],
+    "expert_categories": [
+      {
+        "name": "Verification Code Generation & Lifecycle",
+        "questions": [
+          "What algorithm generates the verification code — TOTP (RFC 6238), HOTP (RFC 4226), a proprietary PRNG, or a hash-based scheme? Provide the complete generation algorithm including all inputs.",
+          "What is the code length (digits or characters), character set, and format? Provide the entropy calculation (bits) for the generated code.",
+          "What is the validity window (seconds) for a time-limited code? How is clock skew between issuer and verifier handled — what is the maximum tolerated drift (seconds) and how many adjacent time windows are accepted?",
+          "What is the code invalidation mechanism — single-use (invalidated after one verification attempt), time-expiry only, or both? How is a used code marked to prevent replay?",
+          "What happens on verification failure — is the code invalidated immediately, how many attempts are permitted, and what is the lockout policy (lockout duration, unlocking mechanism)?"
+        ]
+      },
+      {
+        "name": "Internal Identity Representation & Mapping",
+        "questions": [
+          "What is the internal identity representation — a UUID, a hash, a structured token, or a database primary key? Provide the data type, length (bytes or bits), and format specification.",
+          "How is the mapping between the external verification code and the internal identity representation stored — in-memory, in a database, or derived cryptographically? Provide the data structure.",
+          "Is the mapping one-to-one (one code per identity at any time) or one-to-many (multiple valid codes per identity)? Describe the lookup and collision handling.",
+          "How is the internal identity representation protected from being derived or guessed from the external code? What cryptographic separation exists between the two?",
+          "What is the lifecycle of the internal identity representation — when is it created, updated, and deleted? Who has read and write access?"
+        ]
+      },
+      {
+        "name": "Cryptographic Security & Threat Model",
+        "questions": [
+          "What cryptographic primitives are used in code generation (HMAC-SHA1, HMAC-SHA256, AES, other)? Provide the key length (bits) and key derivation method.",
+          "Where is the shared secret or cryptographic key stored on the issuing side and the verifying side? What protections (HSM, secure enclave, encrypted storage) are applied?",
+          "What is the claimed security level against brute-force attack — given the code space size and validity window, what is the probability of a random guess succeeding per attempt?",
+          "How does the system resist replay attacks (reuse of an intercepted valid code) and pre-computation attacks (pre-generating future codes)?",
+          "What audit log is maintained of code generation, verification attempts (success and failure), and code invalidation events? What fields are recorded and what is the retention period?"
+        ]
+      },
+      {
+        "name": "Integration & Deployment Requirements",
+        "questions": [
+          "What interface does the verifying party call to check a code — a REST API, a library function, a hardware token reader? Provide the interface contract (input parameters, return values, error codes).",
+          "What latency requirement (ms) must the verification check meet? What is the expected throughput (verifications per second) at peak load?",
+          "How is the system integrated with existing identity providers (LDAP, Active Directory, OAuth 2.0, SAML)? Describe the federation model.",
+          "What happens if the verification service is unavailable — is there a fallback mechanism, offline verification mode, or fail-open/fail-closed policy?",
+          "What regulatory or compliance requirements apply (FIDO2, NIST SP 800-63B authenticator assurance level, PCI-DSS, ISO 27001)?"
+        ]
+      }
+    ],
+    "anti_patterns": [
+      "Do NOT ask about UI design, screen layout, or user experience",
+      "Do NOT ask about server hardware specifications unless the hardware is the novel claim",
+      "Do NOT ask about biometrics, fingerprints, or facial recognition unless explicitly mentioned in the document",
+      "Do NOT ask about network topology or cloud infrastructure unless claimed as novel",
+      "DO ask about the code generation algorithm and identity mapping mechanism specifically"
+    ]
+  },
+  "oled_display": {
+    "triggers": [
+      "\\bOLED\\b",
+      "\\borganic light.emitting\\b",
+      "\\borganic LED\\b",
+      "\\bAMOLED\\b",
+      "\\bPMOLED\\b",
+      "\\borganic electroluminescent\\b",
+      "\\bflexible display\\b",
+      "\\bflexible OLED\\b",
+      "\\bemissive display\\b",
+      "\\bself.emissive\\b",
+      "\\borganic emitter\\b",
+      "\\bphosphorescent\\b",
+      "\\bfluorescent emitter\\b"
+    ],
+    "anti_patterns": [
+      "Do NOT ask about LCD backlight — OLED is self-emissive, there is no backlight",
+      "Do NOT ask about liquid crystal orientation or polarisers",
+      "Do NOT ask about light guide plates or extraction patterns",
+      "DO ask about the organic stack layer sequence and thickness",
+      "DO ask about encapsulation — moisture/oxygen ingress is the primary failure mode"
+    ],
+    "expert_categories": [
+      {
+        "name": "Organic Emissive Stack & Device Architecture",
+        "questions": [
+          "Provide the complete layer stack from anode to cathode: list every layer (HIL, HTL, EML, ETL, EIL, electrodes), its material identity, and thickness (nm).",
+          "What is the chemical structure and molecular weight of the emissive material? Is it a small molecule, polymer, or quantum dot? Provide the IUPAC name or CAS number.",
+          "What is the external quantum efficiency (EQE %) and current efficiency (cd/A) at the target brightness (cd/m²)?",
+          "What OLED architecture is used — bottom emission, top emission, or transparent? Justify the choice for this application.",
+          "What is the operating voltage (V) at 1000 cd/m² and the threshold voltage (V)? How does voltage vary with luminance?"
+        ]
+      },
+      {
+        "name": "Flexible Substrate & Encapsulation",
+        "questions": [
+          "What is the flexible substrate material (PEN, PET, PI, ultra-thin glass)? Provide thickness (µm), Young's modulus (GPa), and water vapour transmission rate (WVTR g/m²/day).",
+          "What is the minimum bending radius (mm) for static bending and dynamic bending (number of cycles at that radius without luminance loss > 10%)?",
+          "Describe the encapsulation method — thin film encapsulation (TFE), glass frit, barrier film, or hybrid. Provide the WVTR achieved (g/m²/day) and the number of dyadic barrier layers.",
+          "What is the deposition process for the encapsulation layer (ALD, CVD, sputtering)? State the pinhole density and the layer thickness.",
+          "How is the CTE mismatch between substrate and organic layers managed to prevent delamination during thermal cycling?"
+        ]
+      },
+      {
+        "name": "Drive Circuit & Power Efficiency",
+        "questions": [
+          "What TFT backplane technology is used — a-Si, LTPS, IGZO, or organic TFT? Provide the mobility (cm²/Vs) and threshold voltage (V) of the driving transistor.",
+          "Describe the pixel circuit topology — 2T1C, 4T2C, or other. Provide the full circuit schematic including all transistors and capacitors.",
+          "What is the measured power efficiency (lm/W) at 300 cd/m² and 1000 cd/m²? How does it compare to the prior art baseline?",
+          "What drive waveform (current drive, voltage drive, or PWM) is used, and at what frequency? How is luminance uniformity across the panel maintained?",
+          "Describe the compensation scheme for OLED aging and TFT threshold voltage shift — is it external compensation, in-pixel compensation, or algorithmic?"
+        ]
+      },
+      {
+        "name": "Lifetime, Degradation & Reliability",
+        "questions": [
+          "What is the LT50 and LT95 lifetime (hours) at 1000 cd/m² initial brightness? Provide the accelerated aging test conditions (temperature, humidity, brightness).",
+          "What are the primary degradation mechanisms — intrinsic (organic material degradation) or extrinsic (moisture ingress)? Which is dominant for this device?",
+          "How does luminance non-uniformity (mura) develop over lifetime, and what mitigation is implemented?",
+          "What burn-in behaviour is observed under static image conditions? Provide the image retention metric after 500 hours at 50% APL."
         ]
       }
     ]

@@ -34,6 +34,8 @@ _DEFAULTS: Dict[str, Any] = {
     # Scrutiny
     "patent_questions":          None,
     "field_of_invention":         "",        # extracted verbatim from document
+    "mechanism":                  "",        # enabling technical feature
+    "readiness_report":           None,      # ReadinessReport from question_rater
     "agent_log":                 "",
     # Consolidation
     "final_draft":               None,

@@ -9,7 +9,26 @@
       "Motor and actuator drive: commutation, current loop, PWM, position sensing",
       "PCB and hardware platform: layer stack, impedance, EMI, thermal design"
     ],
-    "technical_units": ["V", "A", "W", "Ω", "Hz", "kHz", "MHz", "dB", "dBm", "ns", "ps", "µF", "nF", "µH", "nH", "°C/W", "bits", "LSB"],
+    "technical_units": [
+      "V",
+      "A",
+      "W",
+      "Ω",
+      "Hz",
+      "kHz",
+      "MHz",
+      "dB",
+      "dBm",
+      "ns",
+      "ps",
+      "µF",
+      "nF",
+      "µH",
+      "nH",
+      "°C/W",
+      "bits",
+      "LSB"
+    ],
     "anti_patterns": [
       "Do NOT ask generic 'what is the supply voltage' unless power delivery IS the novel claim",
       "Do NOT ask about PCB layout unless the PCB topology itself is the novel contribution",
@@ -19,55 +38,43 @@
       "Do NOT repeat questions answered elsewhere in the document — read the full RAG context first"
     ]
   },
-
-  "Optics / Display": {
-    "role": "Optical Systems and Display Technology Patent Analyst",
-    "focus_areas": [
-      "Light guide and backlight: dot/feature geometry, extraction efficiency, uniformity",
-      "Optical film and coating: layer stack, refractive index, deposition method, transmittance",
-      "Display panel: pixel architecture, colour filter, TFT design, viewing angle",
-      "Camera and imaging optics: lens design, aberration, MTF, aperture, depth of field",
-      "Projection and AR/VR optics: waveguide, diffractive element, exit pupil, field of view",
-      "Laser and photonic: cavity design, wavelength, beam quality M², power density"
-    ],
-    "technical_units": ["mm", "µm", "nm", "cd/m²", "lm", "lm/W", "%", "°", "dB", "lp/mm", "f/#", "sr", "W/cm²"],
-    "anti_patterns": [
-      "Do NOT ask about electronics driving the display unless the drive circuit is the novel claim",
-      "Do NOT ask about software rendering unless image processing is the invention",
-      "Do NOT ask about the end product (phone, car) — ask about the optical component itself"
-    ]
-  },
-
   "Mechanical": {
     "role": "Mechanical Systems Patent Examiner",
     "focus_areas": [
       "Kinematic chain and degree-of-freedom analysis",
-      "Material selection and mechanical properties (yield strength, fatigue life)",
-      "Tolerance stack-up, fits and clearances",
-      "Load cases, stress and fatigue calculations with safety factors",
+      "Material selection and mechanical properties",
+      "Tolerance stack-up and fits/clearances",
+      "Load cases and stress/fatigue calculations",
       "Manufacturing process and assembly sequence"
     ],
-    "technical_units": ["mm", "N", "Nm", "MPa", "GPa", "°", "kg"],
-    "anti_patterns": [
-      "Do NOT ask electrical questions for purely mechanical inventions"
+    "technical_units": [
+      "mm",
+      "N",
+      "Nm",
+      "MPa",
+      "GPa",
+      "°",
+      "kg"
     ]
   },
-
   "Chemical": {
     "role": "Chemical Process Patent Specialist",
     "focus_areas": [
-      "Reaction mechanism and yield optimisation with conversion data",
-      "Catalyst identity, loading, and regeneration conditions",
-      "Temperature and pressure operating windows with safety limits",
-      "Solvent selection, purity grade, and purification steps",
-      "Analytical characterisation methods (HPLC, GC-MS, NMR) with acceptance criteria"
+      "Reaction mechanism and yield optimisation",
+      "Catalyst identity, loading and regeneration",
+      "Temperature and pressure operating windows",
+      "Solvent selection and purification steps",
+      "Analytical characterisation methods (HPLC, GC, NMR)"
     ],
-    "technical_units": ["mol%", "wt%", "°C", "bar", "mL/min", "g/L"],
-    "anti_patterns": [
-      "Do NOT ask mechanical or electrical questions unless the reactor design is the novelty"
+    "technical_units": [
+      "mol%",
+      "wt%",
+      "°C",
+      "bar",
+      "mL/min",
+      "g/L"
     ]
   },
-
   "Software": {
     "role": "Software and Computer-Implemented Invention Patent Analyst",
     "focus_areas": [
@@ -78,51 +85,97 @@
       "Embedded / real-time software: RTOS, task scheduling, WCET, interrupt latency, memory map",
       "Computer-implemented business method: the TECHNICAL means must be disclosed, not just the business outcome"
     ],
-    "technical_units": ["ms", "µs", "ns", "ops/s", "MB", "GB", "TB", "Mbps", "Gbps", "threads", "processes", "parameters", "epochs"],
+    "technical_units": [
+      "ms",
+      "µs",
+      "ns",
+      "ops/s",
+      "MB",
+      "GB",
+      "TB",
+      "Mbps",
+      "Gbps",
+      "threads",
+      "processes",
+      "parameters",
+      "epochs"
+    ],
     "anti_patterns": [
       "Do NOT ask business or commercial questions — ask only about the technical implementation",
       "Do NOT ask UI/UX questions (colour, layout, screen size) unless the visual rendering IS the novel claim",
       "Do NOT ask about server hardware specifications unless the hardware architecture is the novel contribution",
       "Do NOT ask vague 'how does the system work' questions — demand pseudocode, state diagrams, or data schemas",
       "Do NOT ask about the application domain (e.g. healthcare, finance) — ask about the technical claim",
-      "For ML patents: do NOT accept 'neural network' as sufficient — demand architecture, layer types, and training details",
-      "Do not ask what an LLM is — assume the reader knows. Ask about THIS system's specific LLM configuration.",
-      "Do not ask about training data unless the document claims a custom-trained model.",
-      "Do not ask what performance value was achieved in testing — ask for the TARGET metric and the CONDITIONS under which it must be met.",
-      "Do not ask about training data sources unless the document explicitly claims a custom-trained model — ask instead whether the model is a named third-party model or custom, and what is required to reproduce it.",
-      "Do not ask about hardware or OS requirements in generic terms — ask specifically whether on-device or edge deployment is within the claimed scope, or only cloud inference.",
-      "Do not ask about scalability under load — ask for the maximum concurrent session count the invention claims to support and the architectural mechanism that enforces that ceiling."
+      "For ML patents: do NOT accept 'neural network' as sufficient — demand architecture, layer types, and training details"
     ]
   },
-
   "Medical Devices": {
     "role": "Medical Device Patent Analyst",
     "focus_areas": [
-      "Biocompatibility standard compliance and sterilisation method (ISO 10993)",
-      "Clinical performance parameters and acceptable ranges with evidence",
-      "Regulatory classification pathway (ISO 13485, FDA 510(k), CE marking)",
-      "Material-tissue interaction, degradation rate and leachables",
-      "Failure mode analysis (FMEA) and safety limits"
+      "Biocompatibility and sterilisation method",
+      "Clinical performance parameters and ranges",
+      "Regulatory classification (ISO 13485, FDA 510k)",
+      "Material-tissue interaction and degradation rate",
+      "Safety limits and failure mode analysis"
     ],
-    "technical_units": ["mm", "N", "Pa", "µm", "°C", "mg/kg", "mGy"],
-    "anti_patterns": [
-      "Do NOT ask generic electronics questions unless the control electronics are novel"
+    "technical_units": [
+      "mm",
+      "N",
+      "Pa",
+      "µm",
+      "°C",
+      "mg/kg",
+      "mGy"
     ]
   },
-
   "Materials": {
     "role": "Materials Science Patent Specialist",
     "focus_areas": [
-      "Composition (elemental or phase), purity grade and supplier specification",
-      "Microstructure and grain size characterisation (SEM, XRD, TEM)",
-      "Processing route (sintering temperature/time, rolling reduction, heat treatment cycles)",
-      "Mechanical, thermal and electrical property measurements with test standards",
-      "Corrosion, wear and environmental durability performance data"
+      "Composition (elemental/phase) and purity grade",
+      "Microstructure and grain size characterisation",
+      "Processing route (sintering, rolling, heat treatment)",
+      "Mechanical, thermal and electrical properties",
+      "Corrosion and wear performance data"
     ],
-    "technical_units": ["wt%", "at%", "µm", "MPa", "GPa", "W/mK", "Ω·m"],
+    "technical_units": [
+      "wt%",
+      "at%",
+      "µm",
+      "MPa",
+      "GPa",
+      "W/mK",
+      "Ω·m"
+    ]
+  },
+  "Optics / Display": {
+    "role": "Optical Systems and Display Technology Patent Analyst",
+    "focus_areas": [
+      "Light guide and backlight: dot/feature geometry, extraction efficiency, uniformity",
+      "Optical film and coating: layer stack, refractive index, deposition method, transmittance",
+      "Display panel: pixel architecture, colour filter, TFT design, viewing angle",
+      "Camera and imaging optics: lens design, aberration, MTF, aperture, depth of field",
+      "Projection and AR/VR optics: waveguide, diffractive element, exit pupil, field of view",
+      "Laser and photonic: cavity design, wavelength, beam quality M², power density"
+    ],
+    "technical_units": [
+      "mm",
+      "µm",
+      "nm",
+      "cd/m²",
+      "lm",
+      "lm/W",
+      "%",
+      "°",
+      "dB",
+      "lp/mm",
+      "f/#",
+      "sr",
+      "W/cm²"
+    ],
     "anti_patterns": [
-      "Do NOT ask process equipment questions unless the equipment design is claimed as novel"
+      "Do NOT ask about electronics driving the display unless the drive circuit is the novel claim",
+      "Do NOT ask about software rendering unless image processing is the invention",
+      "Do NOT ask about the end product (phone, car) — ask about the optical component itself"
     ]
   }
 }
-

@@ -1,0 +1,166 @@
+{
+  "product_type": "oled_display",
+  "domain": "Optics / Display — OLED Display",
+  "readiness_threshold": 0.65,
+  "category_threshold": 0.5,
+  "categories": [
+    {
+      "name": "Organic Emissive Stack & Device Architecture",
+      "weight": 0.35,
+      "reference_questions": [
+        "Provide the complete layer stack from anode to cathode listing every layer, material, and thickness (nm).",
+        "What is the chemical structure or CAS number of the emissive material? Small molecule, polymer, or QD?",
+        "What is the external quantum efficiency (EQE %) and current efficiency (cd/A) at target brightness?",
+        "What OLED architecture — bottom emission, top emission, or transparent?",
+        "What is the operating voltage (V) at 1000 cd/m² and threshold voltage (V)?"
+      ],
+      "key_terms": [
+        "organic",
+        "emissive",
+        "EML",
+        "HTL",
+        "ETL",
+        "HIL",
+        "EIL",
+        "anode",
+        "cathode",
+        "ITO",
+        "stack",
+        "layer",
+        "EQE",
+        "quantum efficiency",
+        "current efficiency",
+        "small molecule",
+        "polymer",
+        "phosphorescent",
+        "fluorescent"
+      ],
+      "depth_markers": [
+        "nm",
+        "EQE",
+        "cd/A",
+        "cd/m²",
+        "V",
+        "HTL",
+        "ETL",
+        "EML",
+        "quantum efficiency",
+        "threshold voltage"
+      ]
+    },
+    {
+      "name": "Flexible Substrate & Encapsulation",
+      "weight": 0.3,
+      "reference_questions": [
+        "What flexible substrate material — PEN, PET, PI, ultra-thin glass? Provide thickness (µm) and Young's modulus (GPa).",
+        "What is the minimum bending radius (mm) for static and dynamic use?",
+        "Describe the encapsulation method and achieved WVTR (g/m²/day).",
+        "What deposition process for encapsulation — ALD, CVD, sputtering? Layer thickness and pinhole density?",
+        "How is CTE mismatch between substrate and organic layers managed?"
+      ],
+      "key_terms": [
+        "substrate",
+        "PEN",
+        "PET",
+        "polyimide",
+        "PI",
+        "ultra-thin glass",
+        "Young's modulus",
+        "bending radius",
+        "encapsulation",
+        "WVTR",
+        "barrier",
+        "ALD",
+        "CVD",
+        "moisture",
+        "oxygen",
+        "CTE",
+        "delamination",
+        "thin film encapsulation",
+        "TFE"
+      ],
+      "depth_markers": [
+        "µm",
+        "GPa",
+        "mm",
+        "g/m²/day",
+        "WVTR",
+        "bending radius",
+        "Young's modulus",
+        "ALD",
+        "nm"
+      ]
+    },
+    {
+      "name": "Drive Circuit & Power Efficiency",
+      "weight": 0.2,
+      "reference_questions": [
+        "What TFT technology — a-Si, LTPS, IGZO, organic TFT? Provide mobility (cm²/Vs).",
+        "Describe pixel circuit topology — 2T1C, 4T2C? Provide schematic.",
+        "What is power efficiency (lm/W) at 300 cd/m² and 1000 cd/m²?",
+        "What drive waveform — current, voltage, or PWM? At what frequency?",
+        "Describe compensation scheme for OLED aging and TFT threshold shift."
+      ],
+      "key_terms": [
+        "TFT",
+        "LTPS",
+        "IGZO",
+        "a-Si",
+        "mobility",
+        "pixel circuit",
+        "2T1C",
+        "4T2C",
+        "backplane",
+        "power efficiency",
+        "lm/W",
+        "drive circuit",
+        "compensation",
+        "aging",
+        "threshold voltage shift"
+      ],
+      "depth_markers": [
+        "cm²/Vs",
+        "lm/W",
+        "V",
+        "Hz",
+        "2T1C",
+        "mobility",
+        "power efficiency",
+        "pixel circuit"
+      ]
+    },
+    {
+      "name": "Lifetime, Degradation & Reliability",
+      "weight": 0.15,
+      "reference_questions": [
+        "What is LT50 and LT95 lifetime (hours) at 1000 cd/m²?",
+        "What are the primary degradation mechanisms — intrinsic or extrinsic?",
+        "How does luminance non-uniformity (mura) develop over lifetime?",
+        "What burn-in behaviour after 500 hours at 50% APL?"
+      ],
+      "key_terms": [
+        "LT50",
+        "LT95",
+        "lifetime",
+        "hours",
+        "degradation",
+        "moisture ingress",
+        "burn-in",
+        "mura",
+        "uniformity",
+        "image retention",
+        "aging",
+        "accelerated"
+      ],
+      "depth_markers": [
+        "hours",
+        "LT50",
+        "LT95",
+        "cd/m²",
+        "APL",
+        "burn-in",
+        "accelerated aging"
+      ]
+    }
+  ]
+}

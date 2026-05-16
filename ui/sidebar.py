@@ -45,16 +45,33 @@ def render() -> Optional[str]:
 
 def _render_system_status() -> None:
     st.subheader("🔧 System Status")
-    ollama = OllamaService()
-    if ollama.is_running():
-        st.success("✅ Ollama: Running")
-        try:
-            model = ollama.resolve_model()
-            st.caption(f"LLM: `{model}`")
-        except Exception:
-            st.caption("LLM: (could not resolve)")
+    import config.settings as cfg_mod
+    from services.cloud_llm_service import provider_name, is_cloud_provider
+    provider = cfg_mod.LLM_PROVIDER
+
+    if is_cloud_provider():
+        st.success(f"☁️ LLM Provider: **{provider_name()}**")
+        # Validate API key is present
+        key_present = {
+            "azure":  bool(cfg_mod.AZURE_API_KEY),
+            "claude": bool(cfg_mod.CLAUDE_API_KEY),
+            "openai": bool(cfg_mod.OPENAI_API_KEY),
+        }.get(provider, False)
+        if key_present:
+            st.caption("✅ API key configured")
+        else:
+            st.error(f"❌ API key missing — set the required env var in .env")
     else:
-        st.info("ℹ️ Ollama: Stopped (will auto-start when needed)")
+        ollama = OllamaService()
+        if ollama.is_running():
+            st.success("✅ Ollama: Running")
+            try:
+                model = ollama.resolve_model()
+                st.caption(f"LLM: `{model}`")
+            except Exception:
+                st.caption("LLM: (could not resolve)")
+        else:
+            st.info("ℹ️ Ollama: Stopped (will auto-start when needed)")
 
 
 # ── Project Management ────────────────────────────────────────────────────────
@@ -198,6 +215,11 @@ def _restore_session(project_path: str) -> None:
         st.session_state.user_override         = clf.get("user_override", False)
         st.session_state.patent_type           = clf.get("final_domain", "Electronics")
 
+    # --- Always reset readiness report on project load ---
+    # The restored project has its own questions (if any) but no cached
+    # readiness report — the user must re-run scrutiny to get a fresh score.
+    st.session_state.readiness_report = None
+
 
 # ── Draft1 Uploader ───────────────────────────────────────────────────────────
 
@@ -206,9 +228,7 @@ def _render_draft1_uploader(project_path: Optional[str]) -> None:
 
     meta = st.session_state.get("project_metadata", {})
     if meta.get("draft1_uploaded") and project_path:
-        chunk_count = len(st.session_state.get("draft1_chunks", []))
-        chunk_label = f" – {chunk_count} chunks indexed" if chunk_count else ""
-        st.success(f"✅ Draft1 uploaded{chunk_label}")
+        st.success("✅ Draft1 already uploaded for this project")
         if st.button("🔄 Re-upload Draft1"):
             st.session_state.draft1_processed = False
             st.rerun()
@@ -269,12 +289,15 @@ def _process_draft1(uploaded_file, project_path: Optional[str]) -> None:
         st.session_state.draft1_collection  = col
         st.session_state.draft1_processed   = True
         st.session_state.processed          = True
-        # Update session metadata so the banner shows immediately after rerun
-        if "project_metadata" in st.session_state:
-            st.session_state.project_metadata["draft1_uploaded"] = True
+        # Clear any stale readiness report from a previous patent —
+        # this new document needs its own fresh evaluation
+        st.session_state.readiness_report   = None
+        st.session_state.patent_questions   = None
+        st.session_state.field_of_invention = ""
+        st.session_state.mechanism          = ""
 
         gc.collect()
-        st.toast(f"✅ {uploaded_file.name} – {len(chunks)} chunks indexed", icon="✅")
+        st.success(f"✅ {uploaded_file.name} – {len(chunks)} chunks indexed")
         st.rerun()
 
 
