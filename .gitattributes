@@ -1,0 +1,17 @@
+# Normalize all text files to LF in the repository
+* text=auto eol=lf
+
+# Treat these explicitly as text
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.json  text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.env   text eol=lf
+
+# Binary files — never touch line endings
+*.pdf   binary
+*.docx  binary
+*.png   binary
+*.jpg   binary

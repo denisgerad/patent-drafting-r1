@@ -4,6 +4,7 @@ versions/
 temp/
 kb/
 chromadb_store/
+my-docs/
 project.json
 __pycache__/
 *.pyc

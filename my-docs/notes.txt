@@ -1,9 +1,0 @@
-What was changed (4 files)
-workflows/scrutiny_workflow.py — New 2-pass RAG strategy. Pass 1 uses a broad neutral query ("field of invention abstract summary relates to") specifically designed to retrieve the abstract/field section. A regex extracts the field-of-invention sentence. Pass 2 then uses that extracted sentence as its query rather than a generic domain string. Both passes are combined and deduplicated.
-tasks/task_factory.py — build_scrutiny_task() now has a Mandatory Step 0: the agent must quote the field-of-invention and novelty sentences verbatim from the document before any analysis. If it cannot find them, it must say "NOT FOUND IN DOCUMENT" and stop — it cannot invent them. A new explicit host-device scope guard with a heater/LCD example is embedded in the prompt.
-ui/tab_scrutiny.py — After scrutiny runs, a green verification banner shows the user what field of invention was detected: "🔬 Detected field of invention: a flexible polymer resistive heater film bonded to an LCD." If they see the wrong field displayed, they know immediately to fix their source document's abstract section before trusting the questions.
-ui/session_state.py — Added field_of_invention key to session state defaults.
-
-Recommendation for your Draft1 documents
-The most reliable fix is also structural: make sure every patent info sheet starts with a clear, distinct "Field of the Invention" heading followed by one sentence naming the actual invention. The regex extractor specifically searches for this heading. The heater patent should have: "The present invention relates to a flexible polymer resistive heater film configured for bonding to the surface of an LCD display panel." That one sentence would have prevented the entire failure.
-
