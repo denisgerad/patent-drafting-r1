@@ -1,0 +1,18 @@
+{
+  "epodoc_id": "US.20260105520.A1",
+  "display_id": "US20260105520A1",
+  "title": "PRIVACY-PRESERVING EXCHANGE PROTOCOLS FOR EXCHANGE DISCOVERY BY ARTIFICIAL INTELLIGENCE ORCHESTRATORS",
+  "abstract": "[0000]    Disclosed herein are systems, methods, and computer-readable media for an exchange management platform that obtains, using artificial intelligence (AI) orchestrators, a set of available exchanges based on a set of exchange protocols. In some implementations, a first command set directs one or more AI orchestrators to generate, as output, a set of resources satisfying a first protocol from the set of exchange protocols. A second command set and a second protocol from the set of exchange protocols can then be provided, as input, to the one or more AI orchestrators, causing the one or more AI orchestrators to determine a set of available exchanges for transferring a resource between two entities. The set of available exchanges can be obtained from the one or more AI orchestrators and display of a graphical layout based on the set of available exchanges can be caused.",
+  "grant_date": "",
+  "applicant": "",
+  "source": "epo",
+  "background": "",
+  "summary": "",
+  "description": "",
+  "claims": [],
+  "figures": [],
+  "technical_parameters": [],
+  "claims_raw": "",
+  "description_raw": "",
+  "fetch_timestamp": "2026-05-23T06:03:27.342513+00:00"
+}

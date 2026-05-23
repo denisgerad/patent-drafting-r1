@@ -567,3 +567,129 @@ def split_audit_log(full_text: str) -> Tuple[str, str]:
         parts = full_text.split(marker, 1)
         return parts[0].strip(), parts[1].strip()
     return full_text, ""
+
+
+def build_why_it_matters_task(
+    gap_analyst,
+    gap_title: str,
+    gap_description: str,
+    gap_type: str,
+    reference_says: str,
+    draft_says: str,
+    field_of_invention: str,
+) -> Task:
+    """
+    Generate a clear "why it matters" explanation for one identified gap.
+    Called once per gap in the gap report.
+    Output: 2-3 sentences explaining the legal/technical consequence.
+    """
+    description = f"""
+You are reviewing a patent application gap identified by comparing a draft
+disclosure against a granted reference patent.
+
+FIELD OF INVENTION:
+  "{field_of_invention[:200]}"
+
+GAP IDENTIFIED:
+  Type:        {gap_type}
+  Title:       {gap_title}
+  Description: {gap_description}
+
+REFERENCE PATENT SAYS:
+  {reference_says[:300]}
+
+DRAFT SAYS:
+  {draft_says[:200]}
+
+TASK: Write 2-3 sentences explaining WHY this gap matters for patent prosecution.
+Be specific about the legal consequence (examiner rejection type, claim scope
+risk, or enablement failure). Do not be generic. Reference the specific
+invention topic where possible.
+
+OUTPUT: Plain text, 2-3 sentences only. No preamble, no headers.
+"""
+    return Task(
+        description=description,
+        agent=gap_analyst,
+        expected_output="2-3 sentences explaining the legal/technical consequence of this gap.",
+    )
+
+
+def build_gap_questions_task(
+    gap_analyst,
+    confirmed_gaps: list,
+    reference_summary: str,
+    draft_summary: str,
+    field_of_invention: str,
+) -> Task:
+    """
+    Generate targeted questions for all confirmed gaps in one LLM call.
+    confirmed_gaps: list of Gap dataclass objects (hil_decision == RELEVANT)
+
+    Output format:
+      [Gap Title]
+      1. Specific question with units/drawing request
+      2. Specific question with units/drawing request
+
+      [Gap Title]
+      ...
+    """
+    if not confirmed_gaps:
+        return None
+
+    gaps_text = ""
+    for i, gap in enumerate(confirmed_gaps, 1):
+        note = ("\n  Domain note: " + gap.hil_note) if gap.hil_note else ""
+        why  = ("\n  Why it matters: " + gap.why_it_matters) if gap.why_it_matters else ""
+        gaps_text += (
+            "\nGAP " + str(i) + ": " + gap.title + "\n"
+            + "  Type: " + str(gap.gap_type) + "\n"
+            + "  Reference says: " + gap.reference_says[:200] + "\n"
+            + "  Draft says: " + gap.draft_says[:150]
+            + note + why + "\n"
+        )
+
+    description = f"""
+You are generating targeted questions for an inventor whose patent draft
+has specific gaps compared to a granted reference patent.
+
+FIELD OF INVENTION:
+  "{field_of_invention[:200]}"
+
+REFERENCE PATENT OVERVIEW:
+{reference_summary}
+
+DRAFT OVERVIEW:
+{draft_summary}
+
+CONFIRMED GAPS TO ADDRESS (domain expert has verified these are relevant):
+{gaps_text}
+
+TASK: For each confirmed gap, write 2-4 targeted questions the inventor
+must answer to resolve that gap.
+
+RULES for each question:
+  - Name the SPECIFIC parameter, component, or section required
+  - Include the unit of measurement where applicable (µm, mm, °C, Ω/sq, %)
+  - Request a drawing, formula, or test data where appropriate
+  - Be directly traceable to the gap — not generic
+  - Do NOT ask about topics outside the identified gaps
+
+OUTPUT FORMAT (strict — use exactly these headings):
+[exact gap title from above]
+1. [specific question with parameter name and unit]
+2. [specific question]
+3. [specific question]
+
+[exact gap title from above]
+1. ...
+"""
+    return Task(
+        description=description,
+        agent=gap_analyst,
+        expected_output=(
+            "Grouped questions for each confirmed gap. "
+            "Each group headed by gap title in [brackets]. "
+            "Each question names a specific parameter and includes units."
+        ),
+    )

@@ -47,6 +47,17 @@ _DEFAULTS: Dict[str, Any] = {
     "custom_role":               None,
     "custom_backstory":          None,
     "persona_tuned":             False,
+    # Augmentation source tracking
+    "augmentation_source":       "none",    # "none"|"bank"|"claude"|"bank+claude"
+    # Gap analysis (new reference patent flow — Steps 1a-1d)
+    "reference_candidates":      [],         # list[PatentCandidate] from auto search
+    "selected_references":       [],         # list[PatentCandidate] confirmed by user
+    "reference_structured":      {},         # dict[display_id → StructuredPatent.to_dict()]
+    "gap_report":                None,       # GapReport (from gap_analysis_workflow)
+    "gap_report_reviewed":       False,      # True after domain expert HIL review
+    "gap_questions":             None,       # str — targeted questions from confirmed gaps
+    "gap_analysis_step":         "1a",       # current sub-step: 1a|1b|1c|1d
+    "gap_analysis_running":      False,
 }
 
 

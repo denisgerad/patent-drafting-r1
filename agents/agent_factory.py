@@ -132,3 +132,31 @@ def build_validator() -> Agent:
         llm=get_llm(),
         verbose=True,
     )
+
+
+def build_gap_analyst() -> Agent:
+    """
+    Agent for gap analysis workflow (Phase D).
+    Given a gap report and reference patent context, generates:
+      1. Why-it-matters explanations per gap
+      2. Targeted questions for confirmed gaps
+    """
+    return Agent(
+        role="Patent Gap Analysis Specialist",
+        goal=(
+            "Given a structured gap report comparing a draft patent disclosure against "
+            "a granted reference patent, generate clear explanations of why each gap "
+            "matters and produce targeted, specific questions to resolve each gap."
+        ),
+        backstory=(
+            "You are a senior patent attorney with 25 years of prosecution experience. "
+            "You have seen thousands of examiner rejections and know exactly which gaps "
+            "in a patent disclosure lead to §112 enablement rejections, §103 obviousness "
+            "rejections, and claim scope disputes. You write questions that are specific, "
+            "technically precise, and directly traceable to the identified gap. "
+            "You never ask generic questions — every question names a specific parameter, "
+            "component, or measurement that the inventor must provide."
+        ),
+        llm=get_llm(),
+        verbose=True,
+    )

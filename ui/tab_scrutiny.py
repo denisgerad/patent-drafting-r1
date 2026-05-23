@@ -298,11 +298,11 @@ def _run_scrutiny(project_path: Optional[str]) -> None:
         """)
         return
 
-    st.session_state.patent_questions  = result.questions
-    st.session_state.field_of_invention = getattr(result, "field_of_invention", "")
-    st.session_state.mechanism          = getattr(result, "mechanism", "")
-    # Always overwrite — never keep a stale report from a previous patent
-    st.session_state.readiness_report   = getattr(result, "readiness_report", None)
+    st.session_state.patent_questions    = result.questions
+    st.session_state.field_of_invention  = getattr(result, "field_of_invention", "")
+    st.session_state.mechanism           = getattr(result, "mechanism", "")
+    st.session_state.readiness_report    = getattr(result, "readiness_report", None)
+    st.session_state.augmentation_source = getattr(result, "augmentation_source", "none")
 
     if project_path:
         project_manager.save_questions(project_path, result.questions)
@@ -410,6 +410,21 @@ def _render_questions_output(project_path: Optional[str]) -> None:
             "⚠️ Enabling mechanism could not be identified. "
             "Questions may be too generic — describe the specific novel "
             "feature in your Draft1 document."
+        )
+
+    # Augmentation source badge
+    aug_source = st.session_state.get("augmentation_source", "none")
+    if aug_source and aug_source != "none":
+        badge_map = {
+            "bank":        ("🏦", "success", "Expert Bank (Phase 1 — offline, free)"),
+            "claude":      ("☁️", "info",    "Claude Augmentation (Phase 2 — cloud, no patent data sent)"),
+            "bank+claude": ("🔀", "success", "Bank + Claude Augmentation (hybrid)"),
+        }
+        icon, colour, label = badge_map.get(aug_source, ("ℹ️", "info", aug_source))
+        st.success(
+            f"{icon} **Questions augmented by: {label}**\n\n"
+            f"The expert knowledge system added questions to address depth gaps. "
+            f"No patent document content was sent to any cloud service."
         )
 
     # ── Readiness gate panel ─────────────────────────────────────────────

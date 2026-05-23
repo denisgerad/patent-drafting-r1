@@ -29,7 +29,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ── App modules ───────────────────────────────────────────────────────────────
-from ui import session_state, sidebar, tab_scrutiny, tab_consolidation
+from ui import session_state, sidebar, tab_scrutiny, tab_consolidation, tab_gap_analysis
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown(
@@ -85,10 +85,16 @@ def main() -> None:
     st.divider()
 
     # 6. Workflow tabs
-    tab1, tab2 = st.tabs(["🔍 Step 1: Scrutiny", "📝 Step 2: Consolidation"])
+    tab1, tab2, tab3 = st.tabs([
+        "🔍 Step 1: Gap Analysis",
+        "📋 Step 1 (Legacy): Scrutiny",
+        "📝 Step 2: Consolidation",
+    ])
     with tab1:
-        tab_scrutiny.render(project_path)
+        tab_gap_analysis.render(project_path)
     with tab2:
+        tab_scrutiny.render(project_path)
+    with tab3:
         tab_consolidation.render(project_path)
 
     # 7. Footer
