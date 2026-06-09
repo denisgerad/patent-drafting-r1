@@ -161,44 +161,253 @@ if stage == Stage.DRAFT_RECEIVED:
 # ─────────────────────────────────────────────────────────────
 elif stage == Stage.DOMAIN_MARKUP:
     st.header("Step 2 — Domain expert review")
+    st.caption("Left: what the model changed vs your original. Right: your inline markup editor.")
+
+    # ── CSS for diff rendering and markup editor ──────────────
+    st.markdown("""
+    <style>
+    .diff-container {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.7;
+        background: #0e1117;
+        border: 1px solid #2a2d35;
+        border-radius: 6px;
+        padding: 16px;
+        height: 560px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    .diff-added   { background: #0d2b0d; color: #4ec94e; border-left: 3px solid #2ea82e; padding-left: 6px; display: block; }
+    .diff-removed { background: #2b0d0d; color: #e05c5c; text-decoration: line-through; border-left: 3px solid #a82e2e; padding-left: 6px; display: block; }
+    .diff-context { color: #9099a8; display: block; }
+    .diff-label   { font-size: 11px; font-weight: bold; border-radius: 3px; padding: 1px 5px; margin-right: 6px; }
+    .label-added  { background: #1a4a1a; color: #4ec94e; }
+    .label-revised{ background: #2a2a0a; color: #c9c94e; }
+    .change-block {
+        border: 1px solid #2a2d35;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        background: #13151c;
+    }
+    .change-reason { font-size: 12px; color: #7a7d8a; margin-bottom: 6px; font-style: italic; }
+    .markup-legend {
+        background: #13151c;
+        border: 1px solid #2a2d35;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 12px;
+        font-size: 12px;
+        color: #9099a8;
+    }
+    .markup-legend code { background: #1e2130; padding: 1px 5px; border-radius: 3px; color: #c9c94e; }
+    </style>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
+    # ── LEFT: Diff view ───────────────────────────────────────
     with col1:
-        st.subheader("Completed draft (with model changes)")
-        # Highlight [[ADDED/REVISED]] markers
-        display_text = pipeline.state.completed_draft
-        st.text_area("", display_text, height=500, disabled=True, key="completed")
+        st.subheader("Model changes — diff view")
 
-        # Change summary
         changes = pipeline.state.completion_diff
-        if changes:
-            with st.expander(f"📋 {len(changes)} changes made by model"):
-                for i, c in enumerate(changes, 1):
-                    badge = "🟦 ADDED" if c["type"] == "ADDED" else "🟨 REVISED"
-                    st.markdown(f"**{i}. {badge}** — {c['reason']}")
+        original = pipeline.state.original_draft
+        completed = pipeline.state.completed_draft
 
+        if changes:
+            # Tab between "visual diff" and "change list"
+            tab_diff, tab_list = st.tabs(["📄 Inline diff", "📋 Change list"])
+
+            with tab_diff:
+                # Build HTML diff: show original lines, highlight [[ADDED/REVISED]] blocks
+                import re as _re
+                import html as _html
+
+                def build_diff_html(original_text: str, completed_text: str) -> str:
+                    """
+                    Render completed_text with [[ADDED/REVISED:...]]...[[/ADDED|/REVISED]]
+                    markers as a colour-coded diff against original.
+                    Lines present in original but absent in completed shown as removals.
+                    """
+                    # Split completed into segments: marked changes vs plain text
+                    pattern = r"(\[\[(ADDED|REVISED): ([^\]]+)\]\])(.*?)(\[\[/(?:ADDED|REVISED)\]\])"
+                    parts = _re.split(pattern, completed_text, flags=_re.DOTALL)
+
+                    html_parts = []
+                    i = 0
+                    while i < len(parts):
+                        chunk = parts[i]
+                        if i + 4 < len(parts) and _re.match(r"\[\[(ADDED|REVISED)", chunk):
+                            # This is a change marker group from split
+                            change_type = parts[i+1]   # ADDED or REVISED
+                            reason      = parts[i+2]
+                            content     = parts[i+3]
+                            label_cls   = "label-added" if change_type == "ADDED" else "label-revised"
+                            label_txt   = "＋ ADDED" if change_type == "ADDED" else "✎ REVISED"
+                            html_parts.append(
+                                f'<span class="diff-added">'
+                                f'<span class="diff-label {label_cls}">{label_txt}</span>'
+                                f'<em style="font-size:11px;color:#666"> {_html.escape(reason)}</em>\n'
+                                f'{_html.escape(content.strip())}'
+                                f'</span>'
+                            )
+                            i += 5
+                        else:
+                            # Plain context text
+                            escaped = _html.escape(chunk)
+                            html_parts.append(f'<span class="diff-context">{escaped}</span>')
+                            i += 1
+
+                    return "".join(html_parts)
+
+                diff_html = build_diff_html(original, completed)
+                st.markdown(
+                    f'<div class="diff-container">{diff_html}</div>',
+                    unsafe_allow_html=True
+                )
+
+            with tab_list:
+                for i, c in enumerate(changes, 1):
+                    badge_color = "#4ec94e" if c["type"] == "ADDED" else "#c9c94e"
+                    badge_label = "＋ ADDED" if c["type"] == "ADDED" else "✎ REVISED"
+                    st.markdown(
+                        f'<div class="change-block">'
+                        f'<div><span style="color:{badge_color};font-weight:bold">{badge_label}</span> '
+                        f'<span class="change-reason">— {c["reason"]}</span></div>'
+                        f'<div style="font-size:13px;color:#c8d0dc;margin-top:4px">{c["content"][:200]}{"…" if len(c["content"])>200 else ""}</div>'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
+
+                # Domain verification checkboxes
+                st.divider()
+                st.markdown("**✓ Verify model changes**")
+                st.caption("Check each change you accept. Unchecked items auto-flag for redraft.")
+
+                if "verified_changes" not in st.session_state:
+                    st.session_state.verified_changes = {}
+
+                for i, c in enumerate(changes):
+                    key = f"verify_{i}"
+                    checked = st.checkbox(
+                        f"{c['type']} — {c['reason'][:60]}",
+                        value=st.session_state.verified_changes.get(key, True),
+                        key=key
+                    )
+                    st.session_state.verified_changes[key] = checked
+
+        else:
+            # No [[ADDED/REVISED]] markers found — show raw completed draft
+            st.caption("No structured change markers found. Showing completed draft as-is.")
+            st.text_area("Completed draft", completed, height=500, disabled=True, key="completed_raw")
+
+    # ── RIGHT: Inline markup editor ───────────────────────────
     with col2:
         st.subheader("Your markup")
-        st.caption("Strike-outs: prefix line with ~~  |  Questions: prefix with Q:")
-        st.caption("Example: ~~This claim is too broad  |  Q: What is the thermal resistance value?")
 
-        markup = st.text_area(
-            "Enter your strike-outs and questions here",
-            height=400,
-            key="markup_input",
-            placeholder=(
-                "~~Claim 1 line 3: remove 'substantially'\n"
-                "Q: What substrate material is used?\n"
-                "Q: Is figure 3 referenced in the spec?\n"
-                "~~Abstract paragraph 2: remove last sentence"
-            )
+        # Legend
+        st.markdown("""
+        <div class="markup-legend">
+        <strong>Markup syntax</strong><br>
+        <code>~~text to remove~~</code> &nbsp;→ strikethrough / delete<br>
+        <code>++inserted text++</code> &nbsp;&nbsp;→ insert / add<br>
+        <code>??your question??</code> &nbsp;→ question for model<br>
+        <code>##section note##</code> &nbsp;&nbsp;→ section-level comment<br><br>
+        <em>You can also edit freely — the model reads your full markup text.</em>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Pre-populate editor with completed draft so domain edits inline
+        editor_key = "markup_editor"
+        if editor_key not in st.session_state:
+            # First load: seed with completed draft
+            st.session_state[editor_key] = pipeline.state.completed_draft or ""
+
+        # Reset button
+        reset_col, _ = st.columns([1, 3])
+        with reset_col:
+            if st.button("↺ Reset to completed draft", help="Discard edits and reload model output"):
+                st.session_state[editor_key] = pipeline.state.completed_draft or ""
+                st.rerun()
+
+        markup_text = st.text_area(
+            "Edit inline — strike, insert, comment, question",
+            value=st.session_state[editor_key],
+            height=460,
+            key=editor_key,
+            help=(
+                "Edit directly in this box.\n"
+                "~~wrap deletions like this~~\n"
+                "++wrap insertions like this++\n"
+                "??wrap questions like this??\n"
+                "##wrap section notes like this##"
+            ),
         )
 
-        if st.button("▶ Submit markup — Run Step 3 Redraft", type="primary", disabled=not markup.strip()):
-            pipeline.receive_domain_markup(markup)
-            with st.spinner("Model is redrafting based on your markup…"):
+        # Live markup summary
+        import re as _re2
+        deletions  = _re2.findall(r"~~(.+?)~~", markup_text, _re2.DOTALL)
+        insertions = _re2.findall(r"\+\+(.+?)\+\+", markup_text, _re2.DOTALL)
+        questions  = _re2.findall(r"\?\?(.+?)\?\?", markup_text, _re2.DOTALL)
+        comments   = _re2.findall(r"##(.+?)##", markup_text, _re2.DOTALL)
+
+        if any([deletions, insertions, questions, comments]):
+            with st.expander(
+                f"📊 Markup summary — "
+                f"{len(deletions)}✂ {len(insertions)}＋ {len(questions)}? {len(comments)}#",
+                expanded=False
+            ):
+                if deletions:
+                    st.markdown("**✂ Deletions**")
+                    for d in deletions[:5]:
+                        st.markdown(f"- ~~{d[:80]}~~")
+                    if len(deletions) > 5:
+                        st.caption(f"…and {len(deletions)-5} more")
+                if insertions:
+                    st.markdown("**＋ Insertions**")
+                    for ins in insertions[:5]:
+                        st.markdown(f"- `{ins[:80]}`")
+                if questions:
+                    st.markdown("**? Questions for model**")
+                    for q in questions[:5]:
+                        st.markdown(f"- {q[:100]}")
+                if comments:
+                    st.markdown("**# Section notes**")
+                    for c in comments[:5]:
+                        st.markdown(f"- {c[:100]}")
+
+        # Build rejected-changes note from unchecked verifications
+        rejected_notes = ""
+        if "verified_changes" in st.session_state and pipeline.state.completion_diff:
+            rejected = [
+                pipeline.state.completion_diff[i]
+                for i, (k, v) in enumerate(st.session_state.verified_changes.items())
+                if not v and i < len(pipeline.state.completion_diff)
+            ]
+            if rejected:
+                rejected_notes = "\n\nREJECTED MODEL CHANGES (revert these):\n" + "\n".join(
+                    f"- REVERT {r['type']}: {r['reason']}" for r in rejected
+                )
+
+        st.divider()
+        can_submit = markup_text.strip() and markup_text != pipeline.state.completed_draft
+        if st.button(
+            "▶ Submit markup — Run Step 3 Redraft",
+            type="primary",
+            disabled=not can_submit,
+            help="Submit your inline edits to the model for redrafting"
+        ):
+            full_markup = markup_text + rejected_notes
+            pipeline.receive_domain_markup(full_markup)
+            with st.spinner("Model is redrafting from your markup…"):
                 pipeline.step3_redraft()
+            # Clear editor state for next iteration
+            if editor_key in st.session_state:
+                del st.session_state[editor_key]
+            if "verified_changes" in st.session_state:
+                del st.session_state["verified_changes"]
             st.rerun()
 
 # ─────────────────────────────────────────────────────────────

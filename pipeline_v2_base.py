@@ -31,8 +31,8 @@ import requests
 # ─────────────────────────────────────────────────────────────
 
 OLLAMA_BASE = "http://localhost:11434"
-PRIMARY_MODEL   = "mistral-nemo"        # Will match mistral-nemo:* tags
-FALLBACK_MODEL  = "mistral"             # Will match mistral:7b-instruct or similar
+PRIMARY_MODEL   = "mistral-nemo:latest"   # 12B — preferred
+FALLBACK_MODEL  = "mistral:7b-instruct"   # 7B  — if NeMo OOM
 
 UNKNOWN_TAG = "[REQUIRES INVENTOR INPUT]"   # model must use this, never invent
 
@@ -89,26 +89,6 @@ class DocumentState:
 # Ollama helper
 # ─────────────────────────────────────────────────────────────
 
-def _get_available_models() -> list[str]:
-    """Fetch list of available models from Ollama."""
-    try:
-        r = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=5)
-        r.raise_for_status()
-        models = r.json().get("models", [])
-        return [m.get("name", "") for m in models if m.get("name")]
-    except Exception as e:
-        raise RuntimeError(f"Failed to list Ollama models: {e}")
-
-
-def _find_model(keyword: str, available_models: list[str]) -> Optional[str]:
-    """Find first model matching keyword (case-insensitive prefix match)."""
-    keyword_lower = keyword.lower()
-    for model in available_models:
-        if model.lower().startswith(keyword_lower):
-            return model
-    return None
-
-
 def _ollama_generate(prompt: str, system: str = "", timeout: int = OLLAMA_TIMEOUT) -> str:
     """
     Call Ollama /api/generate with streaming enabled.
@@ -116,20 +96,7 @@ def _ollama_generate(prompt: str, system: str = "", timeout: int = OLLAMA_TIMEOU
     stays alive as tokens arrive rather than waiting for the full response.
     Falls back to 7B if NeMo unavailable.
     """
-    # Get available models
-    try:
-        available = _get_available_models()
-        if not available:
-            raise RuntimeError("No models available in Ollama.")
-    except Exception as e:
-        raise RuntimeError(f"Could not connect to Ollama: {e}")
-    
-    # Try primary model (NeMo), then fallback (mistral 7B)
-    for keyword in [PRIMARY_MODEL, FALLBACK_MODEL]:
-        model = _find_model(keyword, available)
-        if not model:
-            continue
-        
+    for model in [PRIMARY_MODEL, FALLBACK_MODEL]:
         payload = {
             "model":  model,
             "prompt": prompt,
@@ -166,17 +133,15 @@ def _ollama_generate(prompt: str, system: str = "", timeout: int = OLLAMA_TIMEOU
         except requests.exceptions.ConnectionError:
             raise RuntimeError("Ollama not running — start with: ollama serve")
         except requests.exceptions.HTTPError as e:
-            raise RuntimeError(f"Ollama error with model '{model}': {e}")
+            if "model" in str(e).lower() or r.status_code == 404:
+                continue   # try fallback model
+            raise
         except requests.exceptions.ReadTimeout:
-            # If streaming times out, try fallback model before giving up
+            # If even streaming times out, try fallback model before giving up
             print(f"[Ollama] Timeout with {model}, trying fallback…")
             continue
 
-    available_str = ", ".join(available)
-    raise RuntimeError(
-        f"Neither '{PRIMARY_MODEL}' nor '{FALLBACK_MODEL}' found in Ollama.\n"
-        f"Available models: {available_str}"
-    )
+    raise RuntimeError(f"Neither {PRIMARY_MODEL} nor {FALLBACK_MODEL} available in Ollama.")
 
 
 # ─────────────────────────────────────────────────────────────
