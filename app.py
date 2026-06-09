@@ -1,158 +1,267 @@
 """
-app.py  –  Entry point for the Patent RAG Streamlit application.
-
-Run with:
-    streamlit run app.py
+Streamlit UI for PatentReviewPipeline
+Run: streamlit run app.py
 """
-import logging
-import sys
-from pathlib import Path
-
-# ── Make sub-packages importable when running from repo root ──────────────────
-sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st
+from pathlib import Path
+import tempfile
+import logging
 
-# ── Page configuration (must be first Streamlit call) ────────────────────────
-st.set_page_config(
-    page_title="AI Patent Drafting Tool",
-    page_icon="📝",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# ── Import your existing RAG helpers ──────────────────────────
+from services.vector_store import search, collection_name_for_project
+from workflows.rag_workflow import build_two_pass_context
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(name)s  %(levelname)s  %(message)s",
-)
+from pipeline import PatentReviewPipeline, Stage
+
 logger = logging.getLogger(__name__)
 
-# ── App modules ───────────────────────────────────────────────────────────────
-from ui import session_state, sidebar, tab_scrutiny, tab_consolidation, tab_gap_analysis
-
-# ── Custom CSS ────────────────────────────────────────────────────────────────
-st.markdown(
-    """
-<style>
-    .main-header   { font-size:2.2rem; font-weight:bold; color:#1F77B4; }
-    .sub-header    { font-size:1.1rem; color:#666; margin-bottom:1.5rem; }
-    .step-card     { background:#f8f9fa; border-radius:.5rem; padding:1rem; margin:.5rem 0; }
-</style>
-""",
-    unsafe_allow_html=True,
+# ─────────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Patent Review Pipeline",
+    page_icon="⚖",
+    layout="wide",
 )
 
+STATE_DIR = "./patent_states"
 
-def main() -> None:
-    # 1. Initialise all session state keys
-    session_state.init()
+# ─────────────────────────────────────────────────────────────
+# Session state init
+# ─────────────────────────────────────────────────────────────
+if "pipeline" not in st.session_state:
+    st.session_state.pipeline = None
+if "doc_id" not in st.session_state:
+    st.session_state.doc_id = None
 
-    # 2. Render sidebar (returns current project_path or None)
-    project_path = sidebar.render()
+# ─────────────────────────────────────────────────────────────
+# Header
+# ─────────────────────────────────────────────────────────────
+st.title("⚖ Patent Review Pipeline")
+st.caption("Domain-assisted patent drafting — 4-stage review loop")
 
-    # 3. Page header
-    st.markdown(
-        '<div class="main-header">📝 AI-Powered Patent Drafting Tool</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div class="sub-header">Automated domain classification · Enablement scrutiny · Document consolidation</div>',
-        unsafe_allow_html=True,
-    )
+# ─────────────────────────────────────────────────────────────
+# Sidebar — document management
+# ─────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.header("Document")
 
-    # 4. Main content ─ show landing page until Draft1 is processed
-    if not st.session_state.processed:
-        _render_landing(project_path)
-        return
+    # Existing docs
+    state_dir = Path(STATE_DIR)
+    state_dir.mkdir(exist_ok=True)
+    existing = sorted([p.stem for p in state_dir.glob("*.json")])
 
-    # 5. Quick-action bar
-    c1, c2, c3 = st.columns([3, 1, 1])
-    with c1:
-        st.markdown("### Patent Drafting Workflow")
-    with c2:
-        if st.button("🆕 New Workflow", use_container_width=True):
-            session_state.reset_workflow(keep_project=True)
+    if existing:
+        st.subheader("Resume existing")
+        selected = st.selectbox("Select document", ["— new —"] + existing)
+        if selected != "— new —" and st.button("Load"):
+            st.session_state.doc_id   = selected
+            st.session_state.pipeline = PatentReviewPipeline(selected, STATE_DIR)
             st.rerun()
-    with c3:
-        proj_name = (
-            st.session_state.project_metadata.get("project_name", "—")
-            if st.session_state.project_metadata
-            else "—"
-        )
-        st.info(f"📂 {proj_name}")
 
     st.divider()
+    st.subheader("New document")
+    new_id = st.text_input("Document ID", placeholder="e.g. US-2024-001")
+    uploaded = st.file_uploader("Upload draft patent (PDF or TXT)", type=["pdf", "txt"])
 
-    # 6. Workflow tabs
-    tab1, tab2, tab3 = st.tabs([
-        "🔍 Step 1: Gap Analysis",
-        "📋 Step 1 (Legacy): Scrutiny",
-        "📝 Step 2: Consolidation",
-    ])
-    with tab1:
-        tab_gap_analysis.render(project_path)
-    with tab2:
-        tab_scrutiny.render(project_path)
-    with tab3:
-        tab_consolidation.render(project_path)
+    if uploaded and new_id and st.button("Start review", type="primary"):
+        # Extract text
+        if uploaded.type == "application/pdf":
+            # Use your existing document_loader if available
+            try:
+                import pdfplumber
+                with pdfplumber.open(uploaded) as pdf:
+                    raw_text = "\n\n".join(
+                        p.extract_text() or "" for p in pdf.pages
+                    )
+            except ImportError:
+                st.error("Install pdfplumber: pip install pdfplumber")
+                st.stop()
+        else:
+            raw_text = uploaded.read().decode("utf-8", errors="replace")
 
-    # 7. Footer
-    st.divider()
-    st.caption(
-        "AI-Powered Patent Drafting · Automated Scrutiny & Consolidation · "
-        "Powered by CrewAI, Ollama & ChromaDB"
+        pipeline = PatentReviewPipeline(new_id, STATE_DIR)
+        pipeline.load_draft(raw_text)
+        st.session_state.pipeline = pipeline
+        st.session_state.doc_id   = new_id
+        st.rerun()
+
+    # Status indicator
+    if st.session_state.pipeline:
+        st.divider()
+        s = st.session_state.pipeline.summary
+        st.metric("Stage", s["stage"])
+        st.metric("Iterations", s["iterations"])
+        if s["go_no_go"]:
+            color = "🟢" if s["go_no_go"] == "GO" else "🔴"
+            st.metric("Verdict", f"{color} {s['go_no_go']}")
+            if s["confidence"] is not None:
+                st.progress(s["confidence"], text=f"Confidence {s['confidence']:.0%}")
+
+# ─────────────────────────────────────────────────────────────
+# Main panel
+# ─────────────────────────────────────────────────────────────
+pipeline: PatentReviewPipeline | None = st.session_state.pipeline
+
+if not pipeline:
+    st.info("Upload a draft patent document in the sidebar to begin.")
+    st.stop()
+
+stage = pipeline.state.stage
+
+# ─────────────────────────────────────────────────────────────
+# Step 1
+# ─────────────────────────────────────────────────────────────
+if stage == Stage.DRAFT_RECEIVED:
+    st.header("Step 1 — Model completes draft")
+    st.write("The model will read your draft, fill gaps, and mark every change inline.")
+
+    with st.expander("Original draft", expanded=False):
+        st.text_area("", pipeline.state.original_draft, height=300, disabled=True)
+
+    domain_type = st.text_input(
+        "Domain / product type (optional)",
+        placeholder="e.g. flexible_heater_film, optical_coating",
+        help="Matched against product_type_checklists.json for targeted RAG",
     )
 
+    if st.button("▶ Run Step 1 — Complete Draft", type="primary"):
+        with st.spinner("Model is completing your draft…"):
+            # Wire the RAG here:
+            rag_context = ""
+            field = None
+            mechanism = None
+            
+            if domain_type:
+                try:
+                    # Try to get existing collection for this domain
+                    from services.vector_store import _get_client
+                    client = _get_client()
+                    collection_name = collection_name_for_project(domain_type, "domain_kb")
+                    
+                    try:
+                        collection = client.get_collection(name=collection_name)
+                        if collection.count() > 0:
+                            rag_context, field, mechanism = build_two_pass_context(collection, domain_type)
+                        else:
+                            st.warning(f"Collection '{collection_name}' exists but is empty. Using empty RAG context.")
+                    except Exception:
+                        st.warning(f"No knowledge base found for '{domain_type}'. Using empty RAG context.")
+                except Exception as e:
+                    logger.warning(f"Error loading RAG context: {e}")
+                    st.warning("Could not load RAG context - proceeding without.")
+            
+            completed = pipeline.step1_complete_draft(
+                rag_context=rag_context,
+                domain_type=domain_type,
+            )
+        st.rerun()
 
-def _render_landing(project_path) -> None:
-    """Landing page shown before any document is processed."""
-    if project_path:
-        meta = st.session_state.project_metadata or {}
-        st.info(f"📂 Project selected: **{meta.get('project_name', '—')}**")
+# ─────────────────────────────────────────────────────────────
+# Domain markup stage
+# ─────────────────────────────────────────────────────────────
+elif stage == Stage.DOMAIN_MARKUP:
+    st.header("Step 2 — Domain expert review")
 
-        if meta.get("draft1_uploaded") and not st.session_state.draft1_processed:
-            if st.button("🚀 Restore Project & Continue Workflow", type="primary"):
-                from ui.sidebar import _restore_session
-                with st.spinner("Restoring project…"):
-                    _restore_session(project_path)
-                st.session_state.processed = True
-                st.rerun()
+    col1, col2 = st.columns(2)
 
-    st.divider()
-    st.markdown("#### 👈 Upload your **Draft1** patent info sheet in the sidebar to begin")
+    with col1:
+        st.subheader("Completed draft (with model changes)")
+        # Highlight [[ADDED/REVISED]] markers
+        display_text = pipeline.state.completed_draft
+        st.text_area("", display_text, height=500, disabled=True, key="completed")
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown(
-            """
-**📊 Phase 1 – RAG Setup**
-- Load and chunk the patent PDF/DOCX
-- Embed and store in ChromaDB
-- Memory-efficient (Ollama stopped during this phase)
-"""
+        # Change summary
+        changes = pipeline.state.completion_diff
+        if changes:
+            with st.expander(f"📋 {len(changes)} changes made by model"):
+                for i, c in enumerate(changes, 1):
+                    badge = "🟦 ADDED" if c["type"] == "ADDED" else "🟨 REVISED"
+                    st.markdown(f"**{i}. {badge}** — {c['reason']}")
+
+    with col2:
+        st.subheader("Your markup")
+        st.caption("Strike-outs: prefix line with ~~  |  Questions: prefix with Q:")
+        st.caption("Example: ~~This claim is too broad  |  Q: What is the thermal resistance value?")
+
+        markup = st.text_area(
+            "Enter your strike-outs and questions here",
+            height=400,
+            key="markup_input",
+            placeholder=(
+                "~~Claim 1 line 3: remove 'substantially'\n"
+                "Q: What substrate material is used?\n"
+                "Q: Is figure 3 referenced in the spec?\n"
+                "~~Abstract paragraph 2: remove last sentence"
+            )
         )
-    with c2:
-        st.markdown(
-            """
-**🤖 Phase 2 – AI Analysis**
-- 🔍 Auto-classify patent domain
-- ✍️ Manual override option
-- Enablement gap analysis (§112)
-- Ollama/Mistral LLM
-"""
-        )
-    with c3:
-        st.markdown(
-            """
-**📄 Phase 3 – Consolidation**
-- Upload your Q&A answers
-- AI merges Draft1 + Q&A → Draft2
-- Audit log of all insertions
-- Export as MD / DOCX / PDF
-"""
-        )
 
+        if st.button("▶ Submit markup — Run Step 3 Redraft", type="primary", disabled=not markup.strip()):
+            pipeline.receive_domain_markup(markup)
+            with st.spinner("Model is redrafting based on your markup…"):
+                pipeline.step3_redraft()
+            st.rerun()
 
-if __name__ == "__main__":
-    main()
+# ─────────────────────────────────────────────────────────────
+# Step 4 — Go/No-go
+# ─────────────────────────────────────────────────────────────
+elif stage == Stage.REDRAFTED:
+    st.header("Step 4 — Go / No-Go Assessment")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Redraft")
+        st.text_area("", pipeline.state.redraft, height=400, disabled=True)
+    with col2:
+        st.subheader("Domain markup applied")
+        st.text_area("", pipeline.state.domain_markup, height=200, disabled=True)
+
+    if st.button("▶ Run Go/No-Go Assessment", type="primary"):
+        with st.spinner("Assessing redraft against domain markup…"):
+            result = pipeline.step4_go_no_go()
+
+        verdict    = result.get("verdict", "NO-GO")
+        confidence = result.get("confidence", 0.0)
+        flagged    = result.get("flagged_items", [])
+        rec        = result.get("recommendation", "")
+
+        if verdict == "GO":
+            st.success(f"✅ GO — Confidence {confidence:.0%}")
+        else:
+            st.error(f"🔴 NO-GO — Confidence {confidence:.0%}")
+
+        st.subheader("Recommendation for domain expert")
+        st.write(rec)
+
+        if flagged:
+            st.subheader(f"⚠ {len(flagged)} unresolved items")
+            for item in flagged:
+                st.markdown(f"- **{item.get('ref','')}**: {item.get('reason','')}")
+
+        st.info("Returning to domain markup stage for next iteration." if verdict == "NO-GO"
+                else "Document closed. Ready for domain sign-off.")
+        st.rerun()
+
+# ─────────────────────────────────────────────────────────────
+# Closed
+# ─────────────────────────────────────────────────────────────
+elif stage == Stage.CLOSED:
+    st.header("✅ Review Complete")
+    st.success(f"Verdict: GO | Confidence: {pipeline.state.confidence:.0%}")
+    st.subheader("Final redraft")
+    st.text_area("", pipeline.state.redraft, height=500, disabled=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.download_button(
+            "⬇ Download final redraft",
+            pipeline.state.redraft,
+            file_name=f"{pipeline.state.doc_id}_final.txt",
+            mime="text/plain",
+        )
+    with col2:
+        if st.button("Start new iteration"):
+            # Reset to DOMAIN_MARKUP for further refinement if needed
+            pipeline.state.stage = Stage.DOMAIN_MARKUP
+            pipeline.state.domain_markup = ""
+            pipeline._save()
+            st.rerun()

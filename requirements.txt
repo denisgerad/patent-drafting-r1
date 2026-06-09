@@ -1,6 +1,6 @@
 # ── Core framework ────────────────────────────────────────────────────────────
 streamlit>=1.35.0
-crewai>=0.41.0
+# crewai>=0.41.0  # removed — no longer needed with pipeline.py architecture
 
 # ── LLM / Embeddings ─────────────────────────────────────────────────────────
 # sentence-transformers is NOT loaded in the Streamlit app –
@@ -13,6 +13,7 @@ chromadb>=0.5.0
 
 # ── Document loading ──────────────────────────────────────────────────────────
 pymupdf>=1.24.0           # PDF text extraction (fitz)
+pdfplumber>=0.10.0        # PDF parsing and table extraction
 python-docx>=1.1.0        # DOCX read/write
 langchain-text-splitters>=0.2.0
 
