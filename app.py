@@ -80,6 +80,12 @@ with st.sidebar:
             raw_text = uploaded.read().decode("utf-8", errors="replace")
 
         pipeline = PatentReviewPipeline(new_id, STATE_DIR)
+        
+        # If document exists but is not in DRAFT_RECEIVED stage, reset it for new upload
+        if pipeline.state.stage != Stage.DRAFT_RECEIVED:
+            st.info(f"Document '{new_id}' exists in {pipeline.state.stage.value} stage. Resetting for new review.")
+            pipeline.reset()
+        
         pipeline.load_draft(raw_text)
         st.session_state.pipeline = pipeline
         st.session_state.doc_id   = new_id
@@ -112,20 +118,43 @@ stage = pipeline.state.stage
 # Step 1
 # ─────────────────────────────────────────────────────────────
 if stage == Stage.DRAFT_RECEIVED:
-    st.header("Step 1 — Model completes draft")
-    st.write("The model will read your draft, fill gaps, and mark every change inline.")
+    st.header("Step 1 — Technical Augmentation")
+    st.write("The model works through your domain scaffold checklist, augments technical gaps, and generates an Inventor Query Sheet for items it cannot resolve.")
 
-    with st.expander("Original draft", expanded=False):
-        st.text_area("", pipeline.state.original_draft, height=300, disabled=True)
+    col_orig, col_scaffold = st.columns(2)
 
-    domain_type = st.text_input(
-        "Domain / product type (optional)",
-        placeholder="e.g. flexible_heater_film, optical_coating",
-        help="Matched against product_type_checklists.json for targeted RAG",
-    )
+    with col_orig:
+        with st.expander("Original draft", expanded=False):
+            st.text_area("", pipeline.state.original_draft, height=300, disabled=True)
 
-    if st.button("▶ Run Step 1 — Complete Draft", type="primary"):
-        with st.spinner("Model is completing your draft…"):
+    with col_scaffold:
+        domain_type = st.text_input(
+            "Domain / product type",
+            placeholder="e.g. light_guide_plate, flexible_heater_film",
+            help="Must match a key in product_type_checklists.json — drives technical augmentation",
+        )
+
+        # Show scaffold preview if domain_type is entered
+        if domain_type:
+            from pipeline import load_scaffold
+            scaffold = load_scaffold(domain_type)
+            if scaffold:
+                cats = scaffold.get("expert_categories", [])
+                tech_reqs = scaffold.get("technical_requirements", [])
+                q_count = sum(len(c.get("questions", [])) for c in cats)
+                st.success(f"✓ Scaffold loaded — {len(cats)} categories, {q_count} technical probes")
+                with st.expander("Preview scaffold categories"):
+                    for cat in cats:
+                        st.markdown(f"**{cat.get('category','')}** — {len(cat.get('questions',[]))} questions")
+                    if tech_reqs:
+                        st.markdown("**Mandatory technical requirements:**")
+                        for r in tech_reqs:
+                            st.markdown(f"  - {r}")
+            else:
+                st.warning(f"No scaffold found for '{domain_type}' — model will augment from draft text only")
+
+    if st.button("▶ Run Step 1 — Technical Augmentation", type="primary"):
+        with st.spinner("Model is augmenting draft against domain scaffold…"):
             # Wire the RAG here:
             rag_context = ""
             field = None
@@ -297,6 +326,45 @@ elif stage == Stage.DOMAIN_MARKUP:
                         key=key
                     )
                     st.session_state.verified_changes[key] = checked
+
+        # ── Inventor Query Sheet ──────────────────────────────
+        queries = pipeline.state.inventor_queries if hasattr(pipeline.state, "inventor_queries") else []
+        if queries:
+            st.divider()
+            st.markdown(f"### 📋 Inventor Query Sheet — {len(queries)} items")
+            st.caption("These gaps could not be resolved from the draft or domain scaffold. Send to inventor before domain review.")
+
+            # Export button
+            query_text = "INVENTOR QUERY SHEET\n" + "="*50 + "\n"
+            query_text += f"Document: {pipeline.state.doc_id}\n\n"
+            for q in queries:
+                query_text += f"Q{q.get('number','?')}. [{q.get('category','General')}]\n"
+                query_text += f"   {q.get('question','')}\n"
+                if q.get("context"):
+                    query_text += f"   Context: {q.get('context','')}\n"
+                query_text += "\n"
+
+            st.download_button(
+                "⬇ Export query sheet (.txt)",
+                query_text,
+                file_name=f"{pipeline.state.doc_id}_inventor_queries.txt",
+                mime="text/plain",
+            )
+
+            for q in queries:
+                cat = q.get("category", "General")
+                num = q.get("number", "?")
+                question = q.get("question", "")
+                context = q.get("context", "")
+                st.markdown(
+                    f'''<div class="change-block">
+                    <div><span style="color:#e09a3a;font-weight:bold">Q{num}</span>
+                    <span style="color:#7a7d8a;font-size:12px"> [{cat}]</span></div>
+                    <div style="color:#c8d0dc;margin-top:4px">{question}</div>
+                    {f'<div style="color:#666;font-size:11px;margin-top:4px;font-style:italic">Context: {context}</div>' if context else ""}
+                    </div>''',
+                    unsafe_allow_html=True
+                )
 
         else:
             # No [[ADDED/REVISED]] markers found — show raw completed draft

@@ -42,6 +42,74 @@ MAX_TOKENS_OUT   = 2048         # cap output length so model doesn't hang genera
 
 
 # ─────────────────────────────────────────────────────────────
+# Scaffold loader — reads product_type_checklists.json
+# ─────────────────────────────────────────────────────────────
+
+def load_scaffold(domain_type: str, checklists_path: str = "product_type_checklists.json") -> dict:
+    """
+    Load technical scaffold for a given domain_type from checklists.
+    Returns dict with:
+      - expert_categories: list of {category, questions[]}
+      - technical_requirements: key specs the model MUST address
+    Returns empty dict if file missing or domain_type not found.
+    """
+    try:
+        p = Path(checklists_path)
+        if not p.exists():
+            p = Path("..") / checklists_path
+        if not p.exists():
+            return {}
+        data = json.loads(p.read_text(encoding="utf-8"))
+        entry = data.get(domain_type, {})
+        return entry if entry and not domain_type.startswith("_") else {}
+    except Exception as e:
+        print(f"[Scaffold] Could not load {checklists_path}: {e}")
+        return {}
+
+
+def build_scaffold_prompt_block(scaffold: dict) -> str:
+    """
+    Convert scaffold expert_categories into a structured prompt block
+    the model uses to drive technical augmentation, not just reformatting.
+    """
+    if not scaffold:
+        return ""
+
+    cats = scaffold.get("expert_categories", [])
+    tech_reqs = scaffold.get("technical_requirements", [])
+
+    lines = ["## DOMAIN TECHNICAL SCAFFOLD"]
+    lines.append("The following domain knowledge defines what a complete patent in this")
+    lines.append("technology area MUST address. Use this to AUGMENT the draft with")
+    lines.append("technically grounded content — do not merely reformat existing text.")
+    lines.append("")
+
+    if tech_reqs:
+        lines.append("### Mandatory Technical Requirements")
+        lines.append("Every complete patent in this domain must specify:")
+        for req in tech_reqs:
+            lines.append(f"  - {req}")
+        lines.append("")
+
+    if cats:
+        lines.append("### Expert Category Checklist")
+        lines.append("For each category, check the draft and either:")
+        lines.append("  (a) confirm present — no action needed")
+        lines.append("  (b) augment with domain-grounded content using [[ADDED: <reason>]]")
+        lines.append("  (c) flag as inventor-required using [[FLAGGED: <question>]] " + UNKNOWN_TAG)
+        lines.append("")
+        for cat in cats:
+            cat_name = cat.get("category", "General")
+            questions = cat.get("questions", [])
+            lines.append(f"**{cat_name}**")
+            for q in questions:
+                lines.append(f"  - {q}")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+# ─────────────────────────────────────────────────────────────
 # State
 # ─────────────────────────────────────────────────────────────
 
@@ -72,6 +140,7 @@ class DocumentState:
     rag_context:     str             = ""   # cached from two-pass RAG
     domain_type:     str             = ""   # e.g. "flexible_heater_film"
     iterations:      int             = 0
+    inventor_queries: list[dict]     = field(default_factory=list)  # from Step 1 query sheet
 
     def save(self, path: Path) -> None:
         d = asdict(self)
@@ -189,31 +258,94 @@ If information is genuinely missing or uncertain, you MUST write exactly: {UNKNO
 Never invent technical specifications, measurements, materials, or claim scope.
 """
 
-def _build_step1_prompt(draft: str, rag_context: str, domain_type: str) -> str:
-    domain_hint = f"\nDomain context (from reference corpus):\n{rag_context}\n" if rag_context else ""
-    type_hint   = f"\nProduct type identified: {domain_type}\n" if domain_type else ""
+def _build_step1_prompt(draft: str, rag_context: str, domain_type: str, scaffold: dict = None) -> str:
+    """
+    Builds the Step 1 augmentation prompt.
+    scaffold dict (from product_type_checklists.json) is the primary driver
+    of technical content — the model works through each expert category
+    explicitly rather than doing open-ended gap detection.
+    """
+    rag_block       = f"## REFERENCE CORPUS CONTEXT\n{rag_context}\n" if rag_context else ""
+    scaffold_block  = build_scaffold_prompt_block(scaffold or {})
+    type_hint       = f"Product type: {domain_type}" if domain_type else "Product type: not specified"
+
     return f"""
-{domain_hint}{type_hint}
+{rag_block}
+{scaffold_block}
 
 ## USER DRAFT PATENT DOCUMENT
+({type_hint})
+
 {draft}
 
-## YOUR TASK — Step 1: Complete and Annotate
+## YOUR TASK — Step 1: Technical Augmentation
 
-Review the draft above and produce an IMPROVED VERSION that:
+Your primary goal is TECHNICAL AUGMENTATION, not reformatting.
+Work through each category in the Domain Technical Scaffold above.
+For each one, assess what the draft says and what is missing.
 
-1. Fills gaps in the specification with technically grounded language
-   — if you cannot fill a gap from the draft text or domain context, write {UNKNOWN_TAG}
-2. Strengthens claim language where it is vague or overbroad
-3. Adds missing standard patent sections (Brief Description of Drawings,
-   Summary of Invention, etc.) if absent
-4. Marks EVERY change you make with this exact format inline:
-   [[ADDED: <one-line reason>]]  ... added text ...  [[/ADDED]]
-   [[REVISED: <one-line reason>]]  ... revised text ...  [[/REVISED]]
+RULES:
+1. Every addition must be technically specific — cite materials, values,
+   mechanisms, tolerances, or process steps from the scaffold or RAG context.
+   Generic filler ("the device may include...") is NOT acceptable.
+2. If a scaffold question cannot be answered from the draft or context,
+   mark it as a flagged inventor question:
+   [[FLAGGED: <exact scaffold question>]] {UNKNOWN_TAG} [[/FLAGGED]]
+3. Mark every augmentation with:
+   [[ADDED: <scaffold category — reason>]] ... technical text ... [[/ADDED]]
+4. Mark every revision with:
+   [[REVISED: <what was wrong — scaffold category>]] ... revised text ... [[/REVISED]]
+5. Do NOT remove original text. Do NOT reformat without adding substance.
+6. After the augmented document, append a section:
 
-Do NOT remove any original text — only add or revise.
-Output the full improved document with all change markers.
+---
+## INVENTOR QUERY SHEET
+List every [[FLAGGED]] item as a numbered question for the inventor.
+Format each as:
+  Q<N>. [Category]: <question>
+  Context: <quote the relevant draft passage, max 30 words>
+---
+
+Output: full augmented document with markers, then the Inventor Query Sheet.
 """
+
+
+def extract_inventor_query_sheet(completed_text: str) -> list[dict]:
+    """
+    Parse the Inventor Query Sheet appended by the model after Step 1.
+    Returns list of {number, category, question, context}.
+    """
+    # Find the query sheet section
+    sheet_match = re.search(
+        r"## INVENTOR QUERY SHEET(.+?)(?:---|\Z)", completed_text, re.DOTALL
+    )
+    if not sheet_match:
+        # Fallback: extract [[FLAGGED:...]] markers directly
+        flagged = re.findall(
+            r"\[\[FLAGGED: ([^\]]+)\]\]", completed_text
+        )
+        return [{"number": i+1, "category": "", "question": q, "context": ""}
+                for i, q in enumerate(flagged)]
+
+    sheet_text = sheet_match.group(1)
+    pattern = r"Q(\d+)\.\s*\[([^\]]+)\]:\s*(.+?)\n\s*Context:\s*(.+?)(?=Q\d+\.|$)"
+    matches = re.findall(pattern, sheet_text, re.DOTALL)
+
+    if matches:
+        return [
+            {
+                "number":   int(m[0]),
+                "category": m[1].strip(),
+                "question": m[2].strip(),
+                "context":  m[3].strip(),
+            }
+            for m in matches
+        ]
+
+    # Simpler fallback: just extract Q<N>. lines
+    lines = [l.strip() for l in sheet_text.split("\n") if re.match(r"Q\d+\.", l.strip())]
+    return [{"number": i+1, "category": "", "question": l, "context": ""}
+            for i, l in enumerate(lines)]
 
 def _build_step3_prompt(completed_draft: str, domain_markup: str) -> str:
     return f"""
@@ -318,6 +450,12 @@ class PatentReviewPipeline:
 
     # ── Ingestion ──────────────────────────────────────────────
 
+    def reset(self) -> None:
+        """Reset pipeline to DRAFT_RECEIVED stage for new document."""
+        self.state = DocumentState(doc_id=self.state.doc_id)
+        self._save()
+        print(f"[Pipeline] Reset: {self.state.doc_id} → DRAFT_RECEIVED")
+
     def load_draft(self, raw_text: str) -> None:
         """Call once when user uploads their draft."""
         assert self.state.stage == Stage.DRAFT_RECEIVED, \
@@ -353,17 +491,27 @@ class PatentReviewPipeline:
         print("[Step 1] Generating completed draft…")
         t0 = time.time()
 
-        prompt = _build_step1_prompt(draft, rag_context, domain_type)
+        # Load domain scaffold to drive augmentation
+        scaffold = load_scaffold(domain_type)
+        if scaffold:
+            print(f"[Step 1] Scaffold loaded for '{domain_type}': "
+                  f"{len(scaffold.get('expert_categories',[]))} categories")
+        else:
+            print(f"[Step 1] No scaffold for '{domain_type}' — augmenting from draft only")
+
+        prompt = _build_step1_prompt(draft, rag_context, domain_type, scaffold)
         result = _ollama_generate(prompt, system=_SYSTEM_BASE)
 
         self.state.completed_draft = result
         self.state.completion_diff = self._extract_changes(result)
+        self.state.inventor_queries = extract_inventor_query_sheet(result)
         self.state.stage           = Stage.DOMAIN_MARKUP
         self.state.iterations     += 1
         self._save()
 
         print(f"[Step 1] Done in {time.time()-t0:.1f}s — "
-              f"{len(self.state.completion_diff)} changes marked")
+              f"{len(self.state.completion_diff)} changes marked, "
+              f"{len(self.state.inventor_queries)} inventor queries")
         return result
 
     # ── Domain markup receipt ──────────────────────────────────
