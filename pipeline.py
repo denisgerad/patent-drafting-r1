@@ -31,10 +31,78 @@ import requests
 # ─────────────────────────────────────────────────────────────
 
 OLLAMA_BASE = "http://localhost:11434"
-PRIMARY_MODEL   = "mistral-nemo:latest"   # 12B — preferred
-FALLBACK_MODEL  = "mistral:7b-instruct"   # 7B  — if NeMo OOM
+PRIMARY_MODEL   = "mistral-nemo"        # Will match mistral-nemo:* tags
+FALLBACK_MODEL  = "mistral"             # Will match mistral:7b-instruct or similar
 
 UNKNOWN_TAG = "[REQUIRES INVENTOR INPUT]"   # model must use this, never invent
+
+
+# ─────────────────────────────────────────────────────────────
+# Ollama helper
+# ─────────────────────────────────────────────────────────────
+
+def _get_available_models() -> list[str]:
+    """Fetch list of available models from Ollama."""
+    try:
+        r = requests.get(f"{OLLAMA_BASE}/api/tags", timeout=5)
+        r.raise_for_status()
+        models = r.json().get("models", [])
+        return [m.get("name", "") for m in models if m.get("name")]
+    except Exception as e:
+        raise RuntimeError(f"Failed to list Ollama models: {e}")
+
+
+def _find_model(keyword: str, available_models: list[str]) -> Optional[str]:
+    """Find first model matching keyword (case-insensitive prefix match)."""
+    keyword_lower = keyword.lower()
+    for model in available_models:
+        if model.lower().startswith(keyword_lower):
+            return model
+    return None
+
+
+def _ollama_generate(prompt: str, system: str = "", timeout: int = 120) -> str:
+    """Call Ollama /api/generate. Falls back to 7B if NeMo unavailable."""
+    # Get available models
+    try:
+        available = _get_available_models()
+        if not available:
+            raise RuntimeError("No models available in Ollama.")
+    except Exception as e:
+        raise RuntimeError(f"Could not connect to Ollama: {e}")
+    
+    # Try primary model (NeMo)
+    model = _find_model(PRIMARY_MODEL, available)
+    if not model:
+        # Try fallback (mistral 7B)
+        model = _find_model(FALLBACK_MODEL, available)
+    
+    if not model:
+        available_str = ", ".join(available)
+        raise RuntimeError(
+            f"Neither '{PRIMARY_MODEL}' nor '{FALLBACK_MODEL}' found in Ollama.\n"
+            f"Available models: {available_str}"
+        )
+    
+    payload = {
+        "model":  model,
+        "prompt": prompt,
+        "system": system,
+        "stream": False,
+        "options": {"temperature": 0.2, "num_ctx": 8192},
+    }
+    try:
+        r = requests.post(
+            f"{OLLAMA_BASE}/api/generate",
+            json=payload,
+            timeout=timeout,
+        )
+        r.raise_for_status()
+        return r.json().get("response", "").strip()
+    except requests.exceptions.ConnectionError:
+        raise RuntimeError("Ollama not running — start with: ollama serve")
+    except requests.exceptions.HTTPError as e:
+        raise RuntimeError(f"Ollama error with model '{model}': {e}")
 
 
 # ─────────────────────────────────────────────────────────────
@@ -79,37 +147,6 @@ class DocumentState:
         d = json.loads(path.read_text(encoding="utf-8"))
         d["stage"] = Stage(d["stage"])
         return cls(**d)
-
-
-# ─────────────────────────────────────────────────────────────
-# Ollama helper
-# ─────────────────────────────────────────────────────────────
-
-def _ollama_generate(prompt: str, system: str = "", timeout: int = 120) -> str:
-    """Call Ollama /api/generate. Falls back to 7B if NeMo unavailable."""
-    for model in [PRIMARY_MODEL, FALLBACK_MODEL]:
-        payload = {
-            "model":  model,
-            "prompt": prompt,
-            "system": system,
-            "stream": False,
-            "options": {"temperature": 0.2, "num_ctx": 8192},
-        }
-        try:
-            r = requests.post(
-                f"{OLLAMA_BASE}/api/generate",
-                json=payload,
-                timeout=timeout,
-            )
-            r.raise_for_status()
-            return r.json().get("response", "").strip()
-        except requests.exceptions.ConnectionError:
-            raise RuntimeError("Ollama not running — start with: ollama serve")
-        except requests.exceptions.HTTPError as e:
-            if "model" in str(e).lower() or r.status_code == 404:
-                continue   # try fallback
-            raise
-    raise RuntimeError(f"Neither {PRIMARY_MODEL} nor {FALLBACK_MODEL} available in Ollama.")
 
 
 # ─────────────────────────────────────────────────────────────
