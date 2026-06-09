@@ -36,6 +36,10 @@ FALLBACK_MODEL  = "mistral"             # Will match mistral:7b-instruct or simi
 
 UNKNOWN_TAG = "[REQUIRES INVENTOR INPUT]"   # model must use this, never invent
 
+OLLAMA_TIMEOUT   = 600          # 10 min — large docs on local hardware need this
+MAX_DRAFT_CHARS  = 6000         # truncate input to avoid context overflow on 7B
+MAX_TOKENS_OUT   = 2048         # cap output length so model doesn't hang generating
+
 
 # ─────────────────────────────────────────────────────────────
 # Ollama helper
@@ -61,8 +65,13 @@ def _find_model(keyword: str, available_models: list[str]) -> Optional[str]:
     return None
 
 
-def _ollama_generate(prompt: str, system: str = "", timeout: int = 120) -> str:
-    """Call Ollama /api/generate. Falls back to 7B if NeMo unavailable."""
+def _ollama_generate(prompt: str, system: str = "", timeout: int = OLLAMA_TIMEOUT) -> str:
+    """
+    Call Ollama /api/generate with streaming enabled.
+    Streaming prevents ReadTimeout on long generations — the connection
+    stays alive as tokens arrive rather than waiting for the full response.
+    Falls back to 7B if NeMo unavailable.
+    """
     # Get available models
     try:
         available = _get_available_models()
@@ -71,38 +80,59 @@ def _ollama_generate(prompt: str, system: str = "", timeout: int = 120) -> str:
     except Exception as e:
         raise RuntimeError(f"Could not connect to Ollama: {e}")
     
-    # Try primary model (NeMo)
-    model = _find_model(PRIMARY_MODEL, available)
-    if not model:
-        # Try fallback (mistral 7B)
-        model = _find_model(FALLBACK_MODEL, available)
-    
-    if not model:
-        available_str = ", ".join(available)
-        raise RuntimeError(
-            f"Neither '{PRIMARY_MODEL}' nor '{FALLBACK_MODEL}' found in Ollama.\n"
-            f"Available models: {available_str}"
-        )
-    
-    payload = {
-        "model":  model,
-        "prompt": prompt,
-        "system": system,
-        "stream": False,
-        "options": {"temperature": 0.2, "num_ctx": 8192},
-    }
-    try:
-        r = requests.post(
-            f"{OLLAMA_BASE}/api/generate",
-            json=payload,
-            timeout=timeout,
-        )
-        r.raise_for_status()
-        return r.json().get("response", "").strip()
-    except requests.exceptions.ConnectionError:
-        raise RuntimeError("Ollama not running — start with: ollama serve")
-    except requests.exceptions.HTTPError as e:
-        raise RuntimeError(f"Ollama error with model '{model}': {e}")
+    # Try primary model (NeMo), then fallback (mistral 7B)
+    for keyword in [PRIMARY_MODEL, FALLBACK_MODEL]:
+        model = _find_model(keyword, available)
+        if not model:
+            continue
+        
+        payload = {
+            "model":  model,
+            "prompt": prompt,
+            "system": system,
+            "stream": True,   # streaming keeps connection alive — fixes ReadTimeout
+            "options": {
+                "temperature": 0.2,
+                "num_ctx":     8192,
+                "num_predict": MAX_TOKENS_OUT,  # cap output length
+            },
+        }
+        try:
+            r = requests.post(
+                f"{OLLAMA_BASE}/api/generate",
+                json=payload,
+                timeout=timeout,
+                stream=True,
+            )
+            r.raise_for_status()
+
+            # Accumulate streamed token chunks
+            chunks = []
+            for line in r.iter_lines():
+                if line:
+                    try:
+                        data = json.loads(line)
+                        chunks.append(data.get("response", ""))
+                        if data.get("done", False):
+                            break
+                    except json.JSONDecodeError:
+                        continue
+            return "".join(chunks).strip()
+
+        except requests.exceptions.ConnectionError:
+            raise RuntimeError("Ollama not running — start with: ollama serve")
+        except requests.exceptions.HTTPError as e:
+            raise RuntimeError(f"Ollama error with model '{model}': {e}")
+        except requests.exceptions.ReadTimeout:
+            # If streaming times out, try fallback model before giving up
+            print(f"[Ollama] Timeout with {model}, trying fallback…")
+            continue
+
+    available_str = ", ".join(available)
+    raise RuntimeError(
+        f"Neither '{PRIMARY_MODEL}' nor '{FALLBACK_MODEL}' found in Ollama.\n"
+        f"Available models: {available_str}"
+    )
 
 
 # ─────────────────────────────────────────────────────────────
